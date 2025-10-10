@@ -1,0 +1,25 @@
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  products         Product[]
+  containers       Container[]
+  productionBatches ProductionBatch[]
+  transactions     Transaction[]
+  barrels          Barrel[]
+  barrelLogs       BarrelLog[]
+  batchingRuns    BatchingRun[]
+  bottlingRuns     BottlingRun[]
+  transfers        Transfer[]
+  finishedGoods    FinishedGoods[]
+  bailmentDepletions BailmentDepletion[]
+  tanks            Tank[]
+  tankLogs         TankLog[]
+  ttbReports       TTBReport[]
+
+  @@map("users")
+}

@@ -1,0 +1,519 @@
+model Product {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  productCode String?  // SKU or product code
+  category    String?  // Whiskey type: bourbon, rye, scotch, etc.
+  abv         Decimal? @db.Decimal(4, 2)  // Alcohol by volume percentage
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  containers       Container[]
+  productionBatches ProductionBatch[]
+  transactions     Transaction[]
+  batchingRuns    BatchingRun[]
+  bottlingRuns     BottlingRun[]
+  finishedGoods    FinishedGoods[]
+  bailmentDepletions BailmentDepletion[]
+
+  @@map("products")
+}
+
+model Container {
+  id                String    @id @default(cuid())
+  userId            String
+  productId         String?
+  containerNumber   String?   // Unique identifier for the container
+  containerType     String    // 'barrel', 'drum', 'tank', 'tote', 'still', 'fermenter'
+  capacityGallons   Decimal   @db.Decimal(10, 2)  // Renamed from volumeGallons for clarity
+  currentVolumeGallons Decimal? @db.Decimal(10, 2)  // Current volume vs capacity
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  fillDate          DateTime?
+  dumpDate          DateTime? // When container was emptied
+  isEmpty           Boolean   @default(false)
+  status            ContainerStatus @default(EMPTY)  // Operational status
+  location          String?   // Physical location/warehouse
+  notes             String?   // Additional information
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+  transfers    Transfer[]
+
+  @@map("containers")
+}
+
+model ProductionBatch {
+  id              String    @id @default(cuid())
+  userId          String
+  productId       String?
+  batchType       BatchType
+  batchNumber     String?
+  startDate       DateTime?
+  endDate         DateTime?
+  volumeGallons   Decimal?   @db.Decimal(10, 2)
+  proof           Decimal?   @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  status          BatchStatus @default(IN_PROGRESS)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+
+  @@map("production_batches")
+}
+
+model Transaction {
+  id                String    @id @default(cuid())
+  userId            String
+  transactionType   TransactionType
+  containerId       String?
+  productionBatchId String?
+  productId         String?
+  volumeGallons     Decimal?  @db.Decimal(10, 2)
+  proofGallons      Decimal?  @db.Decimal(10, 2)
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  notes             String?
+  metadata          Json?     // For additional transaction-specific data
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  container       Container?      @relation(fields: [containerId], references: [id], onDelete: SetNull)
+  productionBatch ProductionBatch? @relation(fields: [productionBatchId], references: [id], onDelete: SetNull)
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("transactions")
+}
+
+// Barrel Management Models
+model Barrel {
+  id                String    @id @default(cuid())
+  userId            String
+  barrelNumber      String    @unique
+  barrelType        String    // 'new_oak', 'used_oak', 'charred', 'toasted'
+  charLevel         Int?      // 1-4 char level
+  toastLevel        Int?      // 1-4 toast level
+  capacityGallons   Decimal   @db.Decimal(10, 2)
+  currentVolumeGallons Decimal? @db.Decimal(10, 2)
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  fillDate          DateTime?
+  dumpDate          DateTime?
+  ageYears          Decimal?  @db.Decimal(4, 2)
+  location          String?   // rackhouse location
+  status            BarrelStatus @default(FILLED)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barrelLogs   BarrelLog[]
+  transfers    Transfer[]
+
+  @@map("barrels")
+}
+
+model BarrelLog {
+  id                String    @id @default(cuid())
+  userId            String
+  barrelId          String
+  logType           BarrelLogType
+  volumeGallons     Decimal?  @db.Decimal(10, 2)
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barrel  Barrel  @relation(fields: [barrelId], references: [id], onDelete: Cascade)
+
+  @@map("barrel_logs")
+}
+
+// Processing Models
+model BatchingRun {
+  id                String    @id @default(cuid())
+  userId            String
+  batchNumber       String
+  productId         String?
+  batchType         BatchingType
+  startDate         DateTime
+  endDate           DateTime?
+  volumeGallons     Decimal?  @db.Decimal(10, 2)
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  status            BatchingStatus @default(IN_PROGRESS)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  bottlingRuns BottlingRun[]
+
+  @@map("batching_runs")
+}
+
+model BottlingRun {
+  id                String    @id @default(cuid())
+  userId            String
+  batchingRunId     String?
+  batchNumber       String
+  productId         String?
+  bottleSize        Decimal   @db.Decimal(8, 2) // in ounces
+  bottlesProduced   Int
+  volumeGallons     Decimal   @db.Decimal(10, 2)
+  proof             Decimal   @db.Decimal(5, 2)
+  startDate         DateTime
+  endDate           DateTime?
+  status            BottlingStatus @default(IN_PROGRESS)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batchingRun  BatchingRun?  @relation(fields: [batchingRunId], references: [id], onDelete: SetNull)
+  product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("bottling_runs")
+}
+
+// Transfer In Bond (TIB) Models
+model Transfer {
+  id                String    @id @default(cuid())
+  userId            String
+  transferNumber    String
+  transferType      TransferType
+  direction         TransferDirection
+  barrelId          String?
+  containerId       String?
+  volumeGallons     Decimal   @db.Decimal(10, 2)
+  proof             Decimal   @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  transferDate      DateTime
+  destination       String?   // destination facility
+  carrier           String?   // transportation company
+  sealNumber        String?   // TTB seal number
+  status            TransferStatus @default(PENDING)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barrel  Barrel? @relation(fields: [barrelId], references: [id], onDelete: SetNull)
+  container Container? @relation(fields: [containerId], references: [id], onDelete: SetNull)
+
+  @@map("transfers")
+}
+
+// Finished Goods Models
+model FinishedGoods {
+  id                String    @id @default(cuid())
+  userId            String
+  productId         String?
+  batchNumber       String?
+  bottleSize        Decimal   @db.Decimal(8, 2) // in ounces
+  quantity          Int
+  proof             Decimal   @db.Decimal(5, 2)
+  location          String?   // warehouse location
+  status            FinishedGoodsStatus @default(IN_WAREHOUSE)
+  receivedDate      DateTime?
+  shippedDate       DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  bailmentDepletions BailmentDepletion[]
+
+  @@map("finished_goods")
+}
+
+model BailmentDepletion {
+  id                String    @id @default(cuid())
+  userId            String
+  finishedGoodsId   String?
+  productId         String?
+  depletionType     DepletionType
+  quantity          Int
+  depletionDate     DateTime
+  reason            String?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  finishedGoods FinishedGoods? @relation(fields: [finishedGoodsId], references: [id], onDelete: SetNull)
+  product       Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("bailment_depletions")
+}
+
+// Tank Management Models
+model Tank {
+  id                String    @id @default(cuid())
+  userId            String
+  tankNumber        String
+  tankType          TankType
+  capacityGallons   Decimal   @db.Decimal(10, 2)
+  currentVolumeGallons Decimal? @db.Decimal(10, 2)
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  status            TankStatus @default(EMPTY)
+  location          String?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tankLogs TankLog[]
+
+  @@map("tanks")
+}
+
+model TankLog {
+  id                String    @id @default(cuid())
+  userId            String
+  tankId            String
+  logType           TankLogType
+  volumeGallons     Decimal?  @db.Decimal(10, 2)
+  proof             Decimal?  @db.Decimal(5, 2)
+  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  action            String?   // 'fill', 'empty', 'transfer', 'filter', 'adjust'
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tank Tank @relation(fields: [tankId], references: [id], onDelete: Cascade)
+
+  @@map("tank_logs")
+}
+
+// Reports Models
+model TTBReport {
+  id                String    @id @default(cuid())
+  userId            String
+  reportType        TTBReportType
+  reportPeriod      String    // e.g., "2024-01"
+  reportDate        DateTime
+  status            TTBReportStatus @default(DRAFT)
+  submittedDate     DateTime?
+  ttbApprovalDate  DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ttb_reports")
+}
+
+// Enums for better type safety
+enum ContainerType {
+  WOODEN_BARREL
+  METAL_DRUM
+  SQUARE_TANK
+  TOTE
+  FIVE_GALLON_TOTE
+  STILL
+  FERMENTER
+}
+
+enum ContainerStatus {
+  EMPTY
+  FILLED
+  IN_USE
+  MAINTENANCE
+  OUT_OF_SERVICE
+  DAMAGED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+enum BatchType {
+  FERMENTATION
+  DISTILLATION
+}
+
+enum BatchStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  CREATE_EMPTY_CONTAINER
+  CREATE_FILLED_CONTAINER
+  DELETE_EMPTY_CONTAINER
+  DELETE_FILLED_CONTAINER
+  EDIT_EMPTY_DATA_CORRECTION
+  EDIT_FILL_DATA_CORRECTION
+  EDIT_FILL_FROM_EMPTY
+  EDIT_EMPTY_FROM_FILLED
+  REFILL_CONTAINER
+  TRANSFER_IN
+  TRANSFER_OUT
+  PRODUCTION
+  DISTILLATION_FINISH
+  SAMPLE_ADJUST
+  PROOF_DOWN
+  BOTTLE_PARTIAL
+  BOTTLE_EMPTY
+  BOTTLING_GAIN
+  BOTTLING_LOSS
+  DELETE_PRODUCT
+  DELETE_PRODUCTION_BATCH
+  CHANGE_ACCOUNT
+}
+
+// Barrel Management Enums
+enum BarrelStatus {
+  EMPTY
+  FILLED
+  DUMPED
+  TRANSFERRED
+  DAMAGED
+}
+
+enum BarrelLogType {
+  FILL
+  DUMP
+  TRANSFER
+  SAMPLING
+  INSPECTION
+  MAINTENANCE
+  ADJUSTMENT
+}
+
+// Processing Enums
+enum BatchingType {
+  BLENDING
+  FILTERING
+  CHILL_FILTERING
+  CARBON_FILTERING
+  FINISHING
+}
+
+enum BatchingStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum BottlingStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Transfer In Bond Enums
+enum TransferType {
+  BARREL
+  CONTAINER
+  TOTE
+  TANKER
+}
+
+enum TransferDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+// Finished Goods Enums
+enum FinishedGoodsStatus {
+  IN_WAREHOUSE
+  SHIPPED
+  RETURNED
+  DAMAGED
+}
+
+enum DepletionType {
+  SALE
+  SAMPLE
+  DAMAGE
+  THEFT
+  RETURN
+  ADJUSTMENT
+}
+
+// Tank Management Enums
+enum TankType {
+  STORAGE
+  BLENDING
+  FINISHING
+  FILTERING
+  TEMPORARY
+}
+
+enum TankStatus {
+  EMPTY
+  FILLED
+  IN_USE
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+enum TankLogType {
+  FILL
+  EMPTY
+  TRANSFER
+  FILTER
+  ADJUST
+  MAINTENANCE
+  SAMPLING
+}
+
+// TTB Reports Enums
+enum TTBReportType {
+  MONTHLY_PRODUCTION
+  MONTHLY_INVENTORY
+  ANNUAL_PRODUCTION
+  SPECIAL_REPORT
+}
+
+enum TTBReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  AMENDED
+}
