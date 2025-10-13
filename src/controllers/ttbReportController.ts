@@ -374,7 +374,7 @@ export const generateMonthlyInventoryReport = async (req: AuthenticatedRequest, 
           total: containers.length,
           filled: containers.filter(c => !c.isEmpty).length,
           empty: containers.filter(c => c.isEmpty).length,
-          totalVolume: containers.reduce((sum, c) => sum + Number(c.volumeGallons), 0)
+          totalVolume: containers.reduce((sum, c) => sum + Number(c.currentVolumeGallons || 0), 0)
         }
       }
     };

@@ -13,7 +13,7 @@ import {
   updateContainer,
   deleteContainer,
   bulkCreateContainers
-} from '../controllers/containerController.js';
+} from '../controllers/containerController';
 
 const router = Router();
 

@@ -7,14 +7,14 @@ import {
   validateBottling,
   validateAccountChange,
   handleValidationErrors 
-} from '../middleware/validation.js';
+} from '../middleware/validation';
 import {
   transferSpirit,
   proofDownSpirit,
   adjustContents,
   bottleSpirit,
   changeAccount
-} from '../controllers/containerOperationController.js';
+} from '../controllers/containerOperationController';
 
 const router = express.Router();
 

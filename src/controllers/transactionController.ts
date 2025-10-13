@@ -35,7 +35,7 @@ export const getAllTransactions = async (req: AuthenticatedRequest, res: Respons
           select: {
             id: true,
             containerType: true,
-            volumeGallons: true
+            currentVolumeGallons: true
           }
         },
         productionBatch: {
@@ -97,7 +97,7 @@ export const getTransactionById = async (req: AuthenticatedRequest, res: Respons
           select: {
             id: true,
             containerType: true,
-            volumeGallons: true
+            currentVolumeGallons: true
           }
         },
         productionBatch: {
@@ -168,7 +168,7 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
           select: {
             id: true,
             containerType: true,
-            volumeGallons: true
+            currentVolumeGallons: true
           }
         },
         productionBatch: {

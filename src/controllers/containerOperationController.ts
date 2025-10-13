@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { TRANSACTION_TYPES } from '../constants';
-import { Container } from '@prisma/client';
+import { Container, TransactionType } from '@prisma/client';
 
 // Transfer spirit between containers
 export const transferSpirit = async (req: AuthenticatedRequest, res: Response) => {
@@ -39,23 +39,23 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
     const proofGallonsTransferred = unit === 'gallons' ? transferAmount * (sourceProof / 100) : transferAmount;
 
     // Update source container
-    const sourceVolume = parseFloat(sourceContainer.volumeGallons.toString());
+    const sourceVolume = sourceContainer.currentVolumeGallons ? parseFloat(sourceContainer.currentVolumeGallons.toString()) : 0;
     const updatedSourceVolume = Math.max(0, sourceVolume - transferAmount);
     const updatedSource = await prisma.container.update({
       where: { id: sourceContainerId },
       data: {
-        volumeGallons: updatedSourceVolume,
+        currentVolumeGallons: updatedSourceVolume,
         isEmpty: updatedSourceVolume <= 0
       }
     });
 
     // Update destination container
-    const destVolume = parseFloat(destinationContainer.volumeGallons.toString());
+    const destVolume = destinationContainer.currentVolumeGallons ? parseFloat(destinationContainer.currentVolumeGallons.toString()) : 0;
     const updatedDestVolume = destVolume + transferAmount;
     const updatedDest = await prisma.container.update({
       where: { id: destinationContainerId },
       data: {
-        volumeGallons: updatedDestVolume,
+        currentVolumeGallons: updatedDestVolume,
         isEmpty: false,
         proof: sourceProof, // Assume same proof
         productId: sourceContainer.productId
@@ -66,7 +66,7 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: TRANSACTION_TYPES.TRANSFER_OUT,
+        transactionType: TRANSACTION_TYPES.TRANSFER_OUT as TransactionType,
         containerId: sourceContainerId,
         volumeGallons: -transferAmount,
         proofGallons: -proofGallonsTransferred,
@@ -77,7 +77,7 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: TRANSACTION_TYPES.TRANSFER_IN,
+        transactionType: TRANSACTION_TYPES.TRANSFER_IN as TransactionType,
         containerId: destinationContainerId,
         volumeGallons: transferAmount,
         proofGallons: proofGallonsTransferred,
@@ -133,7 +133,7 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: TRANSACTION_TYPES.PROOF_DOWN,
+        transactionType: TRANSACTION_TYPES.PROOF_DOWN as TransactionType,
         containerId,
         proof: newProof,
         notes: `Proofed down from ${oldProof} to ${newProof}`
@@ -171,14 +171,14 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const adjustmentAmount = parseFloat(amount);
-    const containerVolume = parseFloat(container.volumeGallons.toString());
+    const containerVolume = container.currentVolumeGallons ? parseFloat(container.currentVolumeGallons.toString()) : 0;
     const newVolume = Math.max(0, containerVolume - adjustmentAmount);
 
     // Update container
     const updatedContainer = await prisma.container.update({
       where: { id: containerId },
       data: {
-        volumeGallons: newVolume,
+        currentVolumeGallons: newVolume,
         isEmpty: newVolume <= 0
       }
     });
@@ -187,7 +187,7 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: TRANSACTION_TYPES.SAMPLE_ADJUST,
+        transactionType: TRANSACTION_TYPES.SAMPLE_ADJUST as TransactionType,
         containerId,
         volumeGallons: -adjustmentAmount,
         notes: `${adjustmentType} adjustment: ${notes}`
@@ -234,14 +234,14 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
 
     const bottleVolume = bottleVolumeMap[bottleSize as keyof typeof bottleVolumeMap] || 0.75;
     const totalBottledVolume = bottleVolume * parseInt(numberOfBottles);
-    const containerVolume = parseFloat(container.volumeGallons.toString());
+    const containerVolume = container.currentVolumeGallons ? parseFloat(container.currentVolumeGallons.toString()) : 0;
     const newVolume = bottlingType === 'empty' ? 0 : Math.max(0, containerVolume - totalBottledVolume);
 
     // Update container
     const updatedContainer = await prisma.container.update({
       where: { id: containerId },
       data: {
-        volumeGallons: newVolume,
+        currentVolumeGallons: newVolume,
         isEmpty: newVolume <= 0
       }
     });
@@ -250,7 +250,7 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: bottlingType === 'partial' ? TRANSACTION_TYPES.BOTTLE_PARTIAL : TRANSACTION_TYPES.BOTTLE_EMPTY,
+        transactionType: (bottlingType === 'partial' ? TRANSACTION_TYPES.BOTTLE_PARTIAL : TRANSACTION_TYPES.BOTTLE_EMPTY) as TransactionType,
         containerId,
         volumeGallons: -totalBottledVolume,
         notes: `Bottled ${numberOfBottles} ${bottleSize} bottles`
@@ -270,7 +270,7 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
 // Change container account
 export const changeAccount = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { containerId, newAccount } = req.body;
+    const { containerId, newAccount: _newAccount } = req.body;
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({

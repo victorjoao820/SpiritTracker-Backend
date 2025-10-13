@@ -247,13 +247,19 @@ export const bulkCreateContainers = async (req: AuthenticatedRequest, res: Respo
 
     const createdContainers = await prisma.container.createMany({
       data: containers.map((container: Container) => ({
+        containerNumber: container.containerNumber || null,
         containerType: container.containerType,
-        volumeGallons: container.volumeGallons,
+        capacityGallons: container.capacityGallons,
+        currentVolumeGallons: container.currentVolumeGallons || null,
         productId: container.productId || null,
-        proof: container.proof,
-        temperatureFahrenheit: container.temperatureFahrenheit,
-        fillDate: container.fillDate,
+        proof: container.proof || null,
+        temperatureFahrenheit: container.temperatureFahrenheit || null,
+        fillDate: container.fillDate || null,
+        dumpDate: container.dumpDate || null,
         isEmpty: container.isEmpty || false,
+        status: container.status || 'EMPTY',
+        location: container.location || null,
+        notes: container.notes || null,
         userId
       })),
       skipDuplicates: true

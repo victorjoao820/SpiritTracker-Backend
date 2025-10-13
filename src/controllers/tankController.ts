@@ -315,6 +315,9 @@ export const getTankInventory = async (req: AuthenticatedRequest, res: Response)
       })
     ]);
 
+    const totalVolumeValue = totalVolume._sum.currentVolumeGallons ? Number(totalVolume._sum.currentVolumeGallons) : 0;
+    const totalCapacityValue = totalCapacity._sum.capacityGallons ? Number(totalCapacity._sum.capacityGallons) : 0;
+
     res.json({
       totalTanks,
       tanksByStatus: tanksByStatus.map((t: any) => ({
@@ -325,10 +328,10 @@ export const getTankInventory = async (req: AuthenticatedRequest, res: Response)
         type: t.tankType,
         count: t._count.tankType
       })),
-      totalVolume: totalVolume._sum.currentVolumeGallons || 0,
-      totalCapacity: totalCapacity._sum.capacityGallons || 0,
-      utilizationRate: totalCapacity._sum.capacityGallons > 0 
-        ? ((totalVolume._sum.currentVolumeGallons || 0) / totalCapacity._sum.capacityGallons) * 100 
+      totalVolume: totalVolumeValue,
+      totalCapacity: totalCapacityValue,
+      utilizationRate: totalCapacityValue > 0 
+        ? (totalVolumeValue / totalCapacityValue) * 100 
         : 0
     });
   } catch (error) {
