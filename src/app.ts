@@ -19,7 +19,7 @@ const app = express();
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['http://spirit-tracker-frontend.s3-website-us-east-1.amazonaws.com']
+    ? ['https://foggymttracker.com', 'https://www.foggymttracker.com']
     : [
         'http://localhost:5173',
         'http://localhost:5174',
