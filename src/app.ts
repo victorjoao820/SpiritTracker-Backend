@@ -19,7 +19,7 @@ const app = express();
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://charitywars.com', 'https://www.charitywars.com', 'https://admin.charitywars.com', 'https://games.charitywars.com']
+    ? ['http://spirit-tracker-frontend.s3-website-us-east-1.amazonaws.com']
     : [
         'http://localhost:5173',
         'http://localhost:5174',
