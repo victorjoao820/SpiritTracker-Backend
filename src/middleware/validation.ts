@@ -344,9 +344,9 @@ export const validateTTBReportUpdate = [
 // Validation result handler
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
-
-  console.log("error:", errors.array(), "req.body:", req.body, "next:", next);
+  console.log("ERRORS:", errors.array(), "req.body:", req.body);
   if (!errors.isEmpty()) {
+    console.log("ERRORS:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
   next();

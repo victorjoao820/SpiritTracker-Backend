@@ -35,4 +35,5 @@ router.delete('/:id', authenticateToken, deleteContainer);
 // Bulk create containers (for import functionality)
 router.post('/bulk', authenticateToken, validateBulkContainers, handleValidationErrors, bulkCreateContainers);
 
+
 export default router;

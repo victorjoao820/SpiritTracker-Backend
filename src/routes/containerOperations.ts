@@ -22,7 +22,7 @@ const router = express.Router();
 router.post('/transfer', authenticateToken, validateTransfer, handleValidationErrors, transferSpirit);
 
 // Proof down spirit
-router.post('/proof-down', authenticateToken, validateProofDown, handleValidationErrors, proofDownSpirit);
+router.post('/proof-down',  authenticateToken, validateProofDown, handleValidationErrors, proofDownSpirit);
 
 // Adjust container contents (sample, loss, gain)
 router.post('/adjust', authenticateToken, validateAdjustment, handleValidationErrors, adjustContents);

@@ -106,7 +106,7 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
         message: 'Authentication required'
       });
     }
-    const { containerId, targetProof } = req.body;
+    const { containerId, targetProof, addWater, finalWineGallons, finalGrossWeight, finalProofGallons } = req.body;
 
     const container = await prisma.container.findFirst({
       where: { id: containerId, userId }
@@ -123,10 +123,25 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
       return res.status(400).json({ error: 'Target proof must be lower than current proof' });
     }
 
-    // Update container proof
+    // Calculate new net weight from final wine gallons
+    const newNetWeight = finalWineGallons ? parseFloat(finalWineGallons) * 8.3 : container.netWeight;
+
+    // Update container with new values
     const updatedContainer = await prisma.container.update({
       where: { id: containerId },
-      data: { proof: newProof }
+      data: { 
+        proof: newProof,
+        netWeight: newNetWeight
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        }
+      }
     });
 
     // Create transaction log
