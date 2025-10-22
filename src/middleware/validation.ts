@@ -26,41 +26,38 @@ export const validateBulkProducts = [
 
 // Container validation rules
 export const validateContainer = [
-  body('containerNumber').optional().trim(),
-  body('containerType').notEmpty().withMessage('Container type is required'),
-  body('capacityGallons').isNumeric().withMessage('Capacity must be a number'),
-  body('currentVolumeGallons').optional().isNumeric().withMessage('Current volume must be a number'),
+  body('name').optional().trim(),
+  body('type').notEmpty().withMessage('Container type is required'),
   body('productId').optional().custom(isCUID).withMessage('Product ID must be valid CUID'),
+  body('status').optional().isIn(['EMPTY', 'FILLED', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'DAMAGED']).withMessage('Status must be valid'),
+  body('account').optional().trim(),
   body('proof').optional().isNumeric().withMessage('Proof must be a number'),
+  body('tareWeight').optional().isNumeric().withMessage('Tare weight must be a number'),
+  body('netWeight').optional().isNumeric().withMessage('Net weight must be a number'),
   body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
   body('fillDate').optional().isISO8601().withMessage('Fill date must be valid date'),
-  body('dumpDate').optional().isISO8601().withMessage('Dump date must be valid date'),
-  body('isEmpty').optional().isBoolean().withMessage('isEmpty must be boolean'),
-  body('status').optional().isIn(['EMPTY', 'FILLED', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'DAMAGED']).withMessage('Status must be valid'),
   body('location').optional().trim(),
   body('notes').optional().trim()
 ];
 
 export const validateContainerUpdate = [
-  body('containerNumber').optional().trim(),
-  body('containerType').optional().notEmpty().withMessage('Container type cannot be empty'),
-  body('capacityGallons').optional().isNumeric().withMessage('Capacity must be a number'),
-  body('currentVolumeGallons').optional().isNumeric().withMessage('Current volume must be a number'),
+  body('name').optional().trim(),
+  body('type').optional().notEmpty().withMessage('Container type cannot be empty'),
   body('productId').optional().custom(isCUID).withMessage('Product ID must be valid CUID'),
+  body('status').optional().isIn(['EMPTY', 'FILLED', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'DAMAGED']).withMessage('Status must be valid'),
+  body('account').optional().trim(),
   body('proof').optional().isNumeric().withMessage('Proof must be a number'),
+  body('tareWeight').optional().isNumeric().withMessage('Tare weight must be a number'),
+  body('netWeight').optional().isNumeric().withMessage('Net weight must be a number'),
   body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
   body('fillDate').optional().isISO8601().withMessage('Fill date must be valid date'),
-  body('dumpDate').optional().isISO8601().withMessage('Dump date must be valid date'),
-  body('isEmpty').optional().isBoolean().withMessage('isEmpty must be boolean'),
-  body('status').optional().isIn(['EMPTY', 'FILLED', 'IN_USE', 'MAINTENANCE', 'OUT_OF_SERVICE', 'DAMAGED']).withMessage('Status must be valid'),
   body('location').optional().trim(),
   body('notes').optional().trim()
 ];
 
 export const validateBulkContainers = [
   body('containers').isArray().withMessage('Containers must be an array'),
-  body('containers.*.containerType').notEmpty().withMessage('Each container must have a type'),
-  body('containers.*.capacityGallons').isNumeric().withMessage('Each container must have a capacity')
+  body('containers.*.type').notEmpty().withMessage('Each container must have a type')
 ];
 
 // Production batch validation rules
@@ -347,6 +344,8 @@ export const validateTTBReportUpdate = [
 // Validation result handler
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
+
+  console.log("error:", errors.array(), "req.body:", req.body, "next:", next);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }

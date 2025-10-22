@@ -39,24 +39,24 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
     const proofGallonsTransferred = unit === 'gallons' ? transferAmount * (sourceProof / 100) : transferAmount;
 
     // Update source container
-    const sourceVolume = sourceContainer.currentVolumeGallons ? parseFloat(sourceContainer.currentVolumeGallons.toString()) : 0;
-    const updatedSourceVolume = Math.max(0, sourceVolume - transferAmount);
+    const sourceNetWeight = sourceContainer.netWeight ? parseFloat(sourceContainer.netWeight.toString()) : 0;
+    const updatedSourceNetWeight = Math.max(0, sourceNetWeight - (transferAmount * 8.3)); // Convert gallons to lbs
     const updatedSource = await prisma.container.update({
       where: { id: sourceContainerId },
       data: {
-        currentVolumeGallons: updatedSourceVolume,
-        isEmpty: updatedSourceVolume <= 0
+        netWeight: updatedSourceNetWeight,
+        status: updatedSourceNetWeight <= 0 ? 'EMPTY' : 'FILLED'
       }
     });
 
     // Update destination container
-    const destVolume = destinationContainer.currentVolumeGallons ? parseFloat(destinationContainer.currentVolumeGallons.toString()) : 0;
-    const updatedDestVolume = destVolume + transferAmount;
+    const destNetWeight = destinationContainer.netWeight ? parseFloat(destinationContainer.netWeight.toString()) : 0;
+    const updatedDestNetWeight = destNetWeight + (transferAmount * 8.3); // Convert gallons to lbs
     const updatedDest = await prisma.container.update({
       where: { id: destinationContainerId },
       data: {
-        currentVolumeGallons: updatedDestVolume,
-        isEmpty: false,
+        netWeight: updatedDestNetWeight,
+        status: 'FILLED',
         proof: sourceProof, // Assume same proof
         productId: sourceContainer.productId
       }
@@ -171,15 +171,15 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const adjustmentAmount = parseFloat(amount);
-    const containerVolume = container.currentVolumeGallons ? parseFloat(container.currentVolumeGallons.toString()) : 0;
-    const newVolume = Math.max(0, containerVolume - adjustmentAmount);
+    const containerNetWeight = container.netWeight ? parseFloat(container.netWeight.toString()) : 0;
+    const newNetWeight = Math.max(0, containerNetWeight - (adjustmentAmount * 8.3)); // Convert gallons to lbs
 
     // Update container
     const updatedContainer = await prisma.container.update({
       where: { id: containerId },
       data: {
-        currentVolumeGallons: newVolume,
-        isEmpty: newVolume <= 0
+        netWeight: newNetWeight,
+        status: newNetWeight <= 0 ? 'EMPTY' : 'FILLED'
       }
     });
 
@@ -234,15 +234,15 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
 
     const bottleVolume = bottleVolumeMap[bottleSize as keyof typeof bottleVolumeMap] || 0.75;
     const totalBottledVolume = bottleVolume * parseInt(numberOfBottles);
-    const containerVolume = container.currentVolumeGallons ? parseFloat(container.currentVolumeGallons.toString()) : 0;
-    const newVolume = bottlingType === 'empty' ? 0 : Math.max(0, containerVolume - totalBottledVolume);
+    const containerNetWeight = container.netWeight ? parseFloat(container.netWeight.toString()) : 0;
+    const newNetWeight = bottlingType === 'empty' ? 0 : Math.max(0, containerNetWeight - (totalBottledVolume * 8.3)); // Convert gallons to lbs
 
     // Update container
     const updatedContainer = await prisma.container.update({
       where: { id: containerId },
       data: {
-        currentVolumeGallons: newVolume,
-        isEmpty: newVolume <= 0
+        netWeight: newNetWeight,
+        status: newNetWeight <= 0 ? 'EMPTY' : 'FILLED'
       }
     });
 
@@ -270,7 +270,7 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
 // Change container account
 export const changeAccount = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { containerId, newAccount: _newAccount } = req.body;
+    const { containerId, newAccount } = req.body;
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -287,11 +287,12 @@ export const changeAccount = async (req: AuthenticatedRequest, res: Response) =>
       return res.status(404).json({ error: 'Container not found' });
     }
 
-    // Note: 'account' field doesn't exist in the Container model
-    // This function would need to be updated based on actual requirements
-    // For now, returning the container as-is
-    const updatedContainer = await prisma.container.findUnique({
-      where: { id: containerId }
+    // Update container account
+    const updatedContainer = await prisma.container.update({
+      where: { id: containerId },
+      data: {
+        account: newAccount
+      }
     });
 
     res.json({

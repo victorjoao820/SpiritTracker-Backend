@@ -24,7 +24,7 @@ export const getAllContainers = async (req: AuthenticatedRequest, res: Response)
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { updatedAt: 'desc' }
     });
 
     res.json(containers);
@@ -75,6 +75,7 @@ export const getContainerById = async (req: AuthenticatedRequest, res: Response)
 export const createContainer = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
+    console.log("userId:", req.user);
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -82,34 +83,34 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
       });
     }
     const {
-      containerNumber,
-      containerType,
-      capacityGallons,
-      currentVolumeGallons,
+      name,
+      type,
       productId,
+      status = 'EMPTY',
+      account,
       proof,
+      tareWeight,
+      netWeight,
       temperatureFahrenheit,
       fillDate,
-      dumpDate,
-      isEmpty = false,
-      status = 'EMPTY',
       location,
       notes
     } = req.body;
 
+    console.log("container:", req.body);
+
     const container = await prisma.container.create({
       data: {
-        containerNumber: containerNumber || null,
-        containerType,
-        capacityGallons: parseFloat(capacityGallons),
-        currentVolumeGallons: currentVolumeGallons ? parseFloat(currentVolumeGallons) : null,
+        name: name || null,
+        type: type || null,
         productId: productId || null,
+        status,
+        account: account || null,
         proof: proof ? parseFloat(proof) : null,
+        tareWeight: tareWeight ? parseFloat(tareWeight) : null,
+        netWeight: netWeight ? parseFloat(netWeight) : null,
         temperatureFahrenheit: temperatureFahrenheit ? parseFloat(temperatureFahrenheit) : null,
         fillDate: fillDate ? new Date(fillDate) : null,
-        dumpDate: dumpDate ? new Date(dumpDate) : null,
-        isEmpty,
-        status,
         location: location || null,
         notes: notes || null,
         userId
@@ -144,32 +145,30 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
     }
     const updateData: any = {};
     const {
-      containerNumber,
-      containerType,
-      capacityGallons,
-      currentVolumeGallons,
+      name,
+      type,
       productId,
+      status,
+      account,
       proof,
+      tareWeight,
+      netWeight,
       temperatureFahrenheit,
       fillDate,
-      dumpDate,
-      isEmpty,
-      status,
       location,
       notes
     } = req.body;
 
-    if (containerNumber !== undefined) updateData.containerNumber = containerNumber || null;
-    if (containerType !== undefined) updateData.containerType = containerType;
-    if (capacityGallons !== undefined) updateData.capacityGallons = parseFloat(capacityGallons);
-    if (currentVolumeGallons !== undefined) updateData.currentVolumeGallons = currentVolumeGallons ? parseFloat(currentVolumeGallons) : null;
+    if (name !== undefined) updateData.name = name || null;
+    if (type !== undefined) updateData.type = type || null;
     if (productId !== undefined) updateData.productId = productId || null;
+    if (status !== undefined) updateData.status = status;
+    if (account !== undefined) updateData.account = account || null;
     if (proof !== undefined) updateData.proof = proof ? parseFloat(proof) : null;
+    if (tareWeight !== undefined) updateData.tareWeight = tareWeight ? parseFloat(tareWeight) : null;
+    if (netWeight !== undefined) updateData.netWeight = netWeight ? parseFloat(netWeight) : null;
     if (temperatureFahrenheit !== undefined) updateData.temperatureFahrenheit = temperatureFahrenheit ? parseFloat(temperatureFahrenheit) : null;
     if (fillDate !== undefined) updateData.fillDate = fillDate ? new Date(fillDate) : null;
-    if (dumpDate !== undefined) updateData.dumpDate = dumpDate ? new Date(dumpDate) : null;
-    if (isEmpty !== undefined) updateData.isEmpty = isEmpty;
-    if (status !== undefined) updateData.status = status;
     if (location !== undefined) updateData.location = location || null;
     if (notes !== undefined) updateData.notes = notes || null;
 
@@ -247,17 +246,16 @@ export const bulkCreateContainers = async (req: AuthenticatedRequest, res: Respo
 
     const createdContainers = await prisma.container.createMany({
       data: containers.map((container: Container) => ({
-        containerNumber: container.containerNumber || null,
-        containerType: container.containerType,
-        capacityGallons: container.capacityGallons,
-        currentVolumeGallons: container.currentVolumeGallons || null,
+        name: container.name || null,
+        type: container.type || null,
         productId: container.productId || null,
+        status: container.status || 'EMPTY',
+        account: container.account || null,
         proof: container.proof || null,
+        tareWeight: container.tareWeight || null,
+        netWeight: container.netWeight || null,
         temperatureFahrenheit: container.temperatureFahrenheit || null,
         fillDate: container.fillDate || null,
-        dumpDate: container.dumpDate || null,
-        isEmpty: container.isEmpty || false,
-        status: container.status || 'EMPTY',
         location: container.location || null,
         notes: container.notes || null,
         userId

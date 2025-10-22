@@ -27,19 +27,17 @@ model Container {
   id                String    @id @default(cuid())
   userId            String
   productId         String?
-  containerNumber   String?   // Unique identifier for the container
-  containerType     String    // 'barrel', 'drum', 'tank', 'tote', 'still', 'fermenter'
-  capacityGallons   Decimal   @db.Decimal(10, 2)  // Renamed from volumeGallons for clarity
-  currentVolumeGallons Decimal? @db.Decimal(10, 2)  // Current volume vs capacity
+  name              String?   // Container name/identifier
+  type              String?   // 'barrel', 'drum', 'tank', 'tote', 'still', 'fermenter'
+  status            ContainerStatus @default(EMPTY)  // Operational status
+  account           String?   // Storage, Production, Processing
   proof             Decimal?  @db.Decimal(5, 2)
+  tareWeight        Decimal?  @db.Decimal(10, 2)  // Weight of empty container
+  netWeight         Decimal?  @db.Decimal(10, 2)  // Weight of contents only
   temperatureFahrenheit Decimal? @db.Decimal(5, 2)
   fillDate          DateTime?
-  dumpDate          DateTime? // When container was emptied
-  isEmpty           Boolean   @default(false)
-  status            ContainerStatus @default(EMPTY)  // Operational status
   location          String?   // Physical location/warehouse
   notes             String?   // Additional information
-  createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   // Relations

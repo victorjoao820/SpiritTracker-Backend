@@ -108,7 +108,7 @@ export const getUserDashboard = async (req: AuthenticatedRequest, res: Response)
         include: {
           container: {
             select: {
-              containerType: true
+              type: true
             }
           },
           product: {
@@ -119,10 +119,10 @@ export const getUserDashboard = async (req: AuthenticatedRequest, res: Response)
         }
       }),
       prisma.container.groupBy({
-        by: ['containerType'],
+        by: ['type'],
         where: { userId },
         _count: {
-          containerType: true
+          type: true
         }
       })
     ]);
@@ -136,8 +136,8 @@ export const getUserDashboard = async (req: AuthenticatedRequest, res: Response)
       },
       recentTransactions,
       containersByType: containersByType.map(c => ({
-        type: c.containerType,
-        count: c._count.containerType
+        type: c.type,
+        count: c._count?.type || 0
       }))
     });
   } catch (error) {

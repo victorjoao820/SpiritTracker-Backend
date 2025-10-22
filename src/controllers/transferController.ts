@@ -39,8 +39,8 @@ export const getAllTransfers = async (req: AuthenticatedRequest, res: Response) 
         container: {
           select: {
             id: true,
-            containerType: true,
-            currentVolumeGallons: true
+            type: true,
+            netWeight: true
           }
         }
       },
@@ -82,8 +82,8 @@ export const getTransferById = async (req: AuthenticatedRequest, res: Response) 
         container: {
           select: {
             id: true,
-            containerType: true,
-            currentVolumeGallons: true
+            type: true,
+            netWeight: true
           }
         }
       }
@@ -158,8 +158,8 @@ export const createTransfer = async (req: AuthenticatedRequest, res: Response) =
         container: {
           select: {
             id: true,
-            containerType: true,
-            currentVolumeGallons: true
+            type: true,
+            netWeight: true
           }
         }
       }
@@ -242,8 +242,8 @@ export const updateTransfer = async (req: AuthenticatedRequest, res: Response) =
         container: {
           select: {
             id: true,
-            containerType: true,
-            currentVolumeGallons: true
+            type: true,
+            netWeight: true
           }
         }
       }

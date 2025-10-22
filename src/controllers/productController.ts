@@ -3,18 +3,21 @@ import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { Response } from 'express';
 
 // Get all products for authenticated user
-export const getAllProducts = async (req: AuthenticatedRequest, res: Response) => {
+export const getAllProducts = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
     const products = await prisma.product.findMany({
       where: { userId: req.user?.userId },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
 
     res.json(products);
@@ -25,21 +28,24 @@ export const getAllProducts = async (req: AuthenticatedRequest, res: Response) =
 };
 
 // Get single product
-export const getProductById = async (req: AuthenticatedRequest, res: Response) => {
+export const getProductById = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
     const product = await prisma.product.findFirst({
       where: {
         id: req.params.id,
-        userId
-      }
+        userId,
+      },
     });
 
     if (!product) {
@@ -54,13 +60,16 @@ export const getProductById = async (req: AuthenticatedRequest, res: Response) =
 };
 
 // Create new product
-export const createProduct = async (req: AuthenticatedRequest, res: Response) => {
+export const createProduct = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
@@ -70,8 +79,8 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
       data: {
         name,
         description: description || '',
-        userId
-      }
+        userId,
+      },
     });
 
     res.status(201).json(product);
@@ -82,13 +91,16 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response) =>
 };
 
 // Update product
-export const updateProduct = async (req: AuthenticatedRequest, res: Response) => {
+export const updateProduct = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
@@ -97,12 +109,12 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
     const product = await prisma.product.updateMany({
       where: {
         id: req.params.id,
-        userId
+        userId,
       },
       data: {
         name,
-        description: description || ''
-      }
+        description: description || '',
+      },
     });
 
     if (product.count === 0) {
@@ -110,7 +122,7 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
     }
 
     const updatedProduct = await prisma.product.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
     });
 
     res.json(updatedProduct);
@@ -121,21 +133,24 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response) =>
 };
 
 // Delete product
-export const deleteProduct = async (req: AuthenticatedRequest, res: Response) => {
+export const deleteProduct = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
     const product = await prisma.product.deleteMany({
       where: {
         id: req.params.id,
-        userId
-      }
+        userId,
+      },
     });
 
     if (product.count === 0) {
@@ -150,13 +165,16 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response) =>
 };
 
 // Bulk create products (for seeding default products)
-export const bulkCreateProducts = async (req: AuthenticatedRequest, res: Response) => {
+export const bulkCreateProducts = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
-        message: 'Authentication required'
+        message: 'Authentication required',
       });
     }
 
@@ -166,14 +184,14 @@ export const bulkCreateProducts = async (req: AuthenticatedRequest, res: Respons
       data: products.map((product: any) => ({
         name: product.name,
         description: product.description || '',
-        userId
+        userId,
       })),
-      skipDuplicates: true
+      skipDuplicates: true,
     });
 
     res.status(201).json({
       message: `${createdProducts.count} products created successfully`,
-      count: createdProducts.count
+      count: createdProducts.count,
     });
   } catch (error) {
     console.error('Error bulk creating products:', error);
