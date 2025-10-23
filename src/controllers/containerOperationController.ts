@@ -106,7 +106,7 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
         message: 'Authentication required'
       });
     }
-    const { containerId, targetProof, addWater, finalWineGallons, finalGrossWeight, finalProofGallons } = req.body;
+    const { containerId, targetProof, finalWineGallons } = req.body;
 
     const container = await prisma.container.findFirst({
       where: { id: containerId, userId }
