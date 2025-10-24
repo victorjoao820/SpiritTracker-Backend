@@ -11,3 +11,5 @@ export * from './transferController';
 export * from './finishedGoodsController';
 export * from './tankController';
 export * from './ttbReportController';
+export * from './fermentationController';
+export * from './distillationController';

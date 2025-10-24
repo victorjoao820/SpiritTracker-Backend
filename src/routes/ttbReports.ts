@@ -11,6 +11,8 @@ import {
   createTTBReport,
   updateTTBReport,
   deleteTTBReport,
+  getFermentationBatches,
+  getDistillationBatches,
   generateMonthlyProductionReport,
   generateMonthlyInventoryReport,
   getTTBReportStats
@@ -32,6 +34,12 @@ router.put('/:id', authenticateToken, validateTTBReportUpdate, handleValidationE
 
 // Delete TTB report
 router.delete('/:id', authenticateToken, deleteTTBReport);
+
+// Get fermentation batches for a specific period
+router.get('/fermentation/:year/:month', authenticateToken, getFermentationBatches);
+
+// Get distillation batches for a specific period
+router.get('/distillation/:year/:month', authenticateToken, getDistillationBatches);
 
 // Generate monthly production report
 router.get('/generate/monthly-production/:year/:month', authenticateToken, generateMonthlyProductionReport);

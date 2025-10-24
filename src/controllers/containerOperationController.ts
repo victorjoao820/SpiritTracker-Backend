@@ -99,6 +99,7 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
 // Proof down spirit
 export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) => {
   try {
+    console.log("PROOF DOWN REQUEST:", req.body);
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -106,7 +107,7 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
         message: 'Authentication required'
       });
     }
-    const { containerId, targetProof, finalWineGallons } = req.body;
+    const { containerId, targetProof } = req.body;
 
     const container = await prisma.container.findFirst({
       where: { id: containerId, userId }
@@ -124,7 +125,7 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
     }
 
     // Calculate new net weight from final wine gallons
-    const newNetWeight = finalWineGallons ? parseFloat(finalWineGallons) * 8.3 : container.netWeight;
+    const newNetWeight = Number(container.netWeight) * oldProof /newProof;
 
     // Update container with new values
     const updatedContainer = await prisma.container.update({

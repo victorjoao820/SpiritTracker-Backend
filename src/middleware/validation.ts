@@ -60,32 +60,50 @@ export const validateBulkContainers = [
   body('containers.*.type').notEmpty().withMessage('Each container must have a type')
 ];
 
-// Production batch validation rules
-export const validateProductionBatch = [
-  body('batchType').isIn(['FERMENTATION', 'DISTILLATION']).withMessage('Batch type must be valid'),
-  body('productId').optional().custom(isCUID).withMessage('Product ID must be valid CUID'),
-  body('batchNumber').optional().trim(),
+// Fermentation batch validation rules
+export const validateFermentationBatch = [
+  body('batchName').notEmpty().trim().withMessage('Batch name is required'),
   body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
   body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
   body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
-  body('proof').optional().isNumeric().withMessage('Proof must be a number'),
-  body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
-  body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid'),
-  body('notes').optional().trim()
+  body('startSG').optional().isNumeric().withMessage('Original gravity must be a number'),
+  body('finalGravity').optional().isNumeric().withMessage('Final gravity must be a number'),
+  body('ingredients').optional().trim(),
+  body('notes').optional().trim(),
+  // body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
 ];
 
-export const validateProductionBatchUpdate = [
-  body('batchType').optional().isIn(['FERMENTATION', 'DISTILLATION']).withMessage('Batch type must be valid'),
-  body('productId').optional().custom(isCUID).withMessage('Product ID must be valid CUID'),
+export const validateFermentationBatchUpdate = [
+  body('batchName').optional().trim(),
+  body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
+  body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
+  body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
+  body('originalGravity').optional().isNumeric().withMessage('Original gravity must be a number'),
+  body('finalGravity').optional().isNumeric().withMessage('Final gravity must be a number'),
+  body('ingredients').optional().trim(),
+  body('notes').optional().trim(),
+  // body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
+];
+
+export const validateDistillationBatch = [
+  body('batchNumber').notEmpty().trim().withMessage('Batch number is required'),
+  body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
+  body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
+  body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
+  body('proof').optional().isNumeric().withMessage('Proof must be a number'),
+  body('notes').optional().trim(),
+  body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
+];
+export const validateDistillationBatchUpdate = [
   body('batchNumber').optional().trim(),
   body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
   body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
   body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
   body('proof').optional().isNumeric().withMessage('Proof must be a number'),
-  body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
-  body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid'),
-  body('notes').optional().trim()
+  body('notes').optional().trim(),
+  body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
 ];
+
 
 // Transaction validation rules
 export const validateTransaction = [
@@ -121,7 +139,8 @@ export const validateContainerTransfer = [
 
 export const validateProofDown = [
   body('containerId').custom(isCUID).withMessage('Container ID must be valid CUID'),
-  body('targetProof').isNumeric().withMessage('Target proof must be a number')
+  body('targetProof').isNumeric().withMessage('Target proof must be a number'),
+  body('finalWineGallons').isNumeric().withMessage('Final wine gallons must be a number')
 ];
 
 export const validateAdjustment = [
@@ -344,7 +363,6 @@ export const validateTTBReportUpdate = [
 // Validation result handler
 export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
-  console.log("ERRORS:", errors.array(), "req.body:", req.body);
   if (!errors.isEmpty()) {
     console.log("ERRORS:", errors.array());
     return res.status(400).json({ errors: errors.array() });

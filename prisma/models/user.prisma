@@ -8,7 +8,9 @@ model User {
   // Relations
   products         Product[]
   containers       Container[]
-  productionBatches ProductionBatch[]
+  fermenters       Fermenter[]
+  fermentations   Fermentation[]
+  distillations Distillation[]
   transactions     Transaction[]
   barrels          Barrel[]
   barrelLogs       BarrelLog[]

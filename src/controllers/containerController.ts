@@ -75,7 +75,6 @@ export const getContainerById = async (req: AuthenticatedRequest, res: Response)
 export const createContainer = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
-    console.log("userId:", req.user);
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -96,8 +95,6 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
       location,
       notes
     } = req.body;
-
-    console.log("container:", req.body);
 
     const container = await prisma.container.create({
       data: {

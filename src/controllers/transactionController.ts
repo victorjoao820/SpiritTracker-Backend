@@ -38,11 +38,11 @@ export const getAllTransactions = async (req: AuthenticatedRequest, res: Respons
             netWeight: true
           }
         },
-        productionBatch: {
+        fermentation: {
           select: {
             id: true,
-            batchType: true,
-            batchNumber: true
+            batchNumber: true,
+            status: true
           }
         },
         product: {
@@ -100,11 +100,11 @@ export const getTransactionById = async (req: AuthenticatedRequest, res: Respons
             netWeight: true
           }
         },
-        productionBatch: {
+        fermentation: {
           select: {
             id: true,
-            batchType: true,
-            batchNumber: true
+            batchNumber: true,
+            status: true
           }
         },
         product: {
@@ -141,7 +141,7 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
     const {
       transactionType,
       containerId,
-      productionBatchId,
+      fermentationId,
       productId,
       volumeGallons,
       proof,
@@ -154,7 +154,7 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
       data: {
         transactionType,
         containerId: containerId || null,
-        productionBatchId: productionBatchId || null,
+        fermentationId: fermentationId || null,
         productId: productId || null,
         volumeGallons: volumeGallons ? parseFloat(volumeGallons) : null,
         proof: proof ? parseFloat(proof) : null,
@@ -171,11 +171,11 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
             netWeight: true
           }
         },
-        productionBatch: {
+        fermentation: {
           select: {
             id: true,
-            batchType: true,
-            batchNumber: true
+            batchNumber: true,
+            status: true
           }
         },
         product: {

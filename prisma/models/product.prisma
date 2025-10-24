@@ -13,7 +13,7 @@ model Product {
   // Relations
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   containers       Container[]
-  productionBatches ProductionBatch[]
+  distillations Distillation[]
   transactions     Transaction[]
   batchingRuns    BatchingRun[]
   bottlingRuns     BottlingRun[]
@@ -49,17 +49,89 @@ model Container {
   @@map("containers")
 }
 
-model ProductionBatch {
+// model ProductionBatch {
+//   id              String    @id @default(cuid())
+//   userId          String
+//   productId       String?
+//   batchType       BatchType
+//   batchNumber     String?
+//   startDate       DateTime?
+//   endDate         DateTime?
+//   volumeGallons   Decimal?   @db.Decimal(10, 2)
+//   proof           Decimal?   @db.Decimal(5, 2)
+//   temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+//   status          BatchStatus @default(IN_PROGRESS)
+//   notes           String?
+//   createdAt       DateTime  @default(now())
+//   updatedAt       DateTime  @updatedAt
+
+//   // Relations
+//   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+//   transactions Transaction[]
+
+//   @@map("production_batches")
+// }
+
+model Fermenter {
   id              String    @id @default(cuid())
   userId          String
+  name            String
+  capacityGallons Decimal?   @db.Decimal(10, 2)
+  currentVolumeGallons Decimal? @db.Decimal(10, 2)
+  proof           Decimal?   @db.Decimal(5, 2)
+  status          BatchStatus @default(IN_PROGRESS)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fermentations Fermentation[]
+}
+
+model Fermentation {
+  id              String    @id @default(cuid())
+  userId          String
+  // productId       String?
+  batchNumber     String?
+  fermenterId     String?
+  mashBill        String? 
+  startDate       DateTime?
+  endDate         DateTime?
+  volumeGallons   Decimal?   @db.Decimal(10, 2)
+  startSG         Decimal?   @db.Decimal(5, 2)
+  status          BatchStatus @default(IN_PROGRESS)
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  user         User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  fermenter       Fermenter? @relation(fields: [fermenterId], references: [id], onDelete: SetNull)
+  distillations Distillation[]
+
+  @@map("fermentations")
+}
+
+model Distillation {
+  id              String    @id @default(cuid())
+  userId          String
+  fermentationId   String?
   productId       String?
   batchType       BatchType
   batchNumber     String?
   startDate       DateTime?
   endDate         DateTime?
   volumeGallons   Decimal?   @db.Decimal(10, 2)
-  proof           Decimal?   @db.Decimal(5, 2)
-  temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+  chargeProof     Decimal?   @db.Decimal(5, 2)
+  yeildProof      Decimal?   @db.Decimal(5, 2)
+  chargeTemperature Decimal? @db.Decimal(5, 2)
+  yeildTemperature Decimal? @db.Decimal(5, 2)
+
+  chargeVolumeGallons Decimal?   @db.Decimal(10, 2)
+  yeildVolumeGallons Decimal?   @db.Decimal(10, 2)
+
   status          BatchStatus @default(IN_PROGRESS)
   notes           String?
   createdAt       DateTime  @default(now())
@@ -68,17 +140,19 @@ model ProductionBatch {
   // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   product      Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
-  transactions Transaction[]
+  fermentation Fermentation? @relation(fields: [fermentationId], references: [id], onDelete: SetNull)
 
-  @@map("production_batches")
+  @@map("distillations")
+
 }
+
 
 model Transaction {
   id                String    @id @default(cuid())
   userId            String
   transactionType   TransactionType
   containerId       String?
-  productionBatchId String?
+  fermentationId String?
   productId         String?
   volumeGallons     Decimal?  @db.Decimal(10, 2)
   proofGallons      Decimal?  @db.Decimal(10, 2)
@@ -92,7 +166,7 @@ model Transaction {
   // Relations
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   container       Container?      @relation(fields: [containerId], references: [id], onDelete: SetNull)
-  productionBatch ProductionBatch? @relation(fields: [productionBatchId], references: [id], onDelete: SetNull)
+  fermentation Fermentation? @relation(fields: [fermentationId], references: [id], onDelete: SetNull)
   product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@map("transactions")
@@ -385,6 +459,7 @@ enum TransactionType {
   TRANSFER_OUT
   PRODUCTION
   DISTILLATION_FINISH
+  FERMENTATION_FINISH
   SAMPLE_ADJUST
   PROOF_DOWN
   BOTTLE_PARTIAL

@@ -184,7 +184,116 @@ export const deleteTTBReport = async (req: AuthenticatedRequest, res: Response) 
   }
 };
 
-// Generate monthly production report
+// Get fermentation batches for a specific period
+export const getFermentationBatches = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const { year, month } = req.params;
+    const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const endDate = new Date(parseInt(year), parseInt(month), 0);
+
+    const [fermentationBatches, totalVolume] = await Promise.all([
+      prisma.fermentation.findMany({
+        where: {
+          userId,
+          startDate: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+      }),
+      prisma.fermentation.aggregate({
+        where: {
+          userId,
+          startDate: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        _sum: { volumeGallons: true }
+      })
+    ]);
+
+    res.json({
+      batches: fermentationBatches,
+      totalBatches: fermentationBatches.length,
+      totalVolume: totalVolume._sum.volumeGallons || 0,
+      period: {
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching fermentation batches:', error);
+    res.status(500).json({ error: 'Failed to fetch fermentation batches' });
+  }
+};
+
+// Get distillation batches for a specific period
+export const getDistillationBatches = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const { year, month } = req.params;
+    const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const endDate = new Date(parseInt(year), parseInt(month), 0);
+
+    const [distillationBatches, totalVolume] = await Promise.all([
+      prisma.distillation.findMany({
+        where: {
+          userId,
+          batchType: 'DISTILLATION',
+          startDate: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        include: {
+          product: true
+        }
+      }),
+      prisma.distillation.aggregate({
+        where: {
+          userId,
+          batchType: 'DISTILLATION',
+          startDate: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        _sum: { volumeGallons: true }
+      })
+    ]);
+
+    res.json({
+      batches: distillationBatches,
+      totalBatches: distillationBatches.length,
+      totalVolume: totalVolume._sum.volumeGallons || 0,
+      period: {
+        startDate,
+        endDate
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching distillation batches:', error);
+    res.status(500).json({ error: 'Failed to fetch distillation batches' });
+  }
+};
+
+// Generate monthly production report using fermentation and distillation functions
 export const generateMonthlyProductionReport = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
@@ -199,35 +308,40 @@ export const generateMonthlyProductionReport = async (req: AuthenticatedRequest,
     const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
     const endDate = new Date(parseInt(year), parseInt(month), 0);
 
+    // Use the new fermentation and distillation functions
     const [
-      productionBatches,
-      distillationBatches,
+      fermentationData,
+      distillationData,
       bottlingRuns,
       transfers,
-      totalProductionVolume,
-      totalDistillationVolume,
       totalBottlingVolume
     ] = await Promise.all([
-      prisma.productionBatch.findMany({
+      // Get fermentation batches
+      prisma.fermentation.findMany({
         where: {
           userId,
-          batchType: 'FERMENTATION',
           startDate: {
             gte: startDate,
             lte: endDate
           }
         }
-      }),
-      prisma.productionBatch.findMany({
+      }).then(batches => ({
+        batches,
+        totalVolume: batches.reduce((sum, batch) => sum + Number(batch.volumeGallons || 0), 0)
+      })),
+      // Get distillation batches
+      prisma.distillation.findMany({
         where: {
           userId,
-          batchType: 'DISTILLATION',
           startDate: {
             gte: startDate,
             lte: endDate
           }
         }
-      }),
+      }).then(batches => ({
+        batches,
+        totalVolume: batches.reduce((sum, batch) => sum + Number(batch.volumeGallons || 0), 0)
+      })),
       prisma.bottlingRun.findMany({
         where: {
           userId,
@@ -245,28 +359,6 @@ export const generateMonthlyProductionReport = async (req: AuthenticatedRequest,
             lte: endDate
           }
         }
-      }),
-      prisma.productionBatch.aggregate({
-        where: {
-          userId,
-          batchType: 'FERMENTATION',
-          startDate: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        _sum: { volumeGallons: true }
-      }),
-      prisma.productionBatch.aggregate({
-        where: {
-          userId,
-          batchType: 'DISTILLATION',
-          startDate: {
-            gte: startDate,
-            lte: endDate
-          }
-        },
-        _sum: { volumeGallons: true }
       }),
       prisma.bottlingRun.aggregate({
         where: {
@@ -288,10 +380,10 @@ export const generateMonthlyProductionReport = async (req: AuthenticatedRequest,
         endDate
       },
       production: {
-        fermentationBatches: productionBatches.length,
-        distillationBatches: distillationBatches.length,
-        totalProductionVolume: totalProductionVolume._sum.volumeGallons || 0,
-        totalDistillationVolume: totalDistillationVolume._sum.volumeGallons || 0
+        fermentationBatches: fermentationData.batches.length,
+        distillationBatches: distillationData.batches.length,
+        totalFermentationVolume: fermentationData.totalVolume,
+        totalDistillationVolume: distillationData.totalVolume
       },
       bottling: {
         bottlingRuns: bottlingRuns.length,

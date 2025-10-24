@@ -6,6 +6,7 @@ import { AuthenticatedRequest } from '../middleware/authMiddleware';
 export const getUserProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
+
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -92,14 +93,15 @@ export const getUserDashboard = async (req: AuthenticatedRequest, res: Response)
     const [
       totalProducts,
       totalContainers,
-      totalProductionBatches,
+      // totalProductionBatches,
       totalTransactions,
       recentTransactions,
       containersByType
     ] = await Promise.all([
       prisma.product.count({ where: { userId } }),
       prisma.container.count({ where: { userId } }),
-      prisma.productionBatch.count({ where: { userId } }),
+      // prisma.distillation.count({ where: { userId } }),
+      // prisma.fermentation.count({ where: { userId } }),
       prisma.transaction.count({ where: { userId } }),
       prisma.transaction.findMany({
         where: { userId },
@@ -131,7 +133,7 @@ export const getUserDashboard = async (req: AuthenticatedRequest, res: Response)
       stats: {
         totalProducts,
         totalContainers,
-        totalProductionBatches,
+        // totalProductionBatches,
         totalTransactions
       },
       recentTransactions,
