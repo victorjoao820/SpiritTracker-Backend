@@ -26,7 +26,7 @@ export const getAllFermentations = async (req: AuthenticatedRequest, res: Respon
         distillations: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         }
@@ -68,7 +68,7 @@ export const getFermentationById = async (req: AuthenticatedRequest, res: Respon
         distillations: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         }
@@ -110,7 +110,7 @@ export const createFermentation = async (req: AuthenticatedRequest, res: Respons
 
     const fermentation = await prisma.fermentation.create({
       data: {
-        batchNumber: batchName || null,
+        batchName: batchName || null,
         fermenterId: fermenterId || null,
         mashBill: mashBill || null,
         startDate: startDate ? new Date(startDate) : null,
@@ -131,7 +131,7 @@ export const createFermentation = async (req: AuthenticatedRequest, res: Respons
         distillations: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         }
@@ -158,25 +158,31 @@ export const updateFermentation = async (req: AuthenticatedRequest, res: Respons
 
     const updateData: any = {};
     const {
-      batchNumber,
+      batchName,
       fermenterId,
       mashBill,
       startDate,
       endDate,
       volumeGallons,
       startSG,
+      finalFG,
       status,
+      ingredient,
       notes
     } = req.body;
 
-    if (batchNumber !== undefined) updateData.batchNumber = batchNumber || null;
+
+    if (batchName !== undefined) updateData.batchName = batchName || null;
     if (fermenterId !== undefined) updateData.fermenterId = fermenterId || null;
     if (mashBill !== undefined) updateData.mashBill = mashBill || null;
     if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
     if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
     if (volumeGallons !== undefined) updateData.volumeGallons = volumeGallons ? parseFloat(volumeGallons) : null;
     if (startSG !== undefined) updateData.startSG = startSG ? parseFloat(startSG) : null;
+    if (finalFG !== undefined) updateData.finalFG = startSG ? parseFloat(finalFG) : null;
+
     if (status !== undefined) updateData.status = status;
+    if (ingredient !== undefined) updateData.ingredient = ingredient || null;
     if (notes !== undefined) updateData.notes = notes || null;
 
     const fermentation = await prisma.fermentation.updateMany({
@@ -204,7 +210,7 @@ export const updateFermentation = async (req: AuthenticatedRequest, res: Respons
         distillations: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         }

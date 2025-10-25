@@ -53,7 +53,6 @@ export interface Product {
   // Relations
   user?: User;
   containers?: Container[];
-  productionBatches?: ProductionBatch[];
   transactions?: Transaction[];
 }
 
@@ -76,17 +75,19 @@ export interface Container {
   transactions?: Transaction[];
 }
 
-export interface ProductionBatch {
+export interface Fermentation {
   id: string;
   userId: string;
-  productId?: string;
-  batchType: string; // 'fermentation', 'distillation'
-  batchNumber?: string;
+  batchName?: string;
   startDate?: Date;
   endDate?: Date;
   volumeGallons?: number;
-  proof?: number;
+  startSG?: number;
+  finalFG?: number;
+  ingredient?: string;
+  status?: string;
   notes?: string;
+  
   createdAt: Date;
   updatedAt: Date;
   
@@ -96,12 +97,40 @@ export interface ProductionBatch {
   transactions?: Transaction[];
 }
 
+export interface Distillation {
+  id: string;
+  userId: string;
+  productId?: string;
+  batchType: string; 
+  batchName?: string;
+  startDate?: Date;
+  endDate?: Date;
+  chargeVolumeGallons?: number;
+  yieldVolumeGallons?: number;
+  chargeProof?: number;
+  yieldProof?: number;
+  chargeTemperature?:number;
+  yieldTemperature?:number;
+  storeYieldContainer?:string;
+
+  status?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Relations
+  user?: User;
+  product?: Product;
+
+  transactions?: Transaction[];
+}
+
 export interface Transaction {
   id: string;
   userId: string;
   transactionType: string; // From TRANSACTION_TYPES constant
   containerId?: string;
-  productionBatchId?: string;
+  fermantationId?: string;
   productId?: string;
   volumeGallons?: number;
   proof?: number;
@@ -113,9 +142,10 @@ export interface Transaction {
   // Relations
   user?: User;
   container?: Container;
-  productionBatch?: ProductionBatch;
   product?: Product;
+  fermentation?: Fermentation;
 }
+
 
 // User interface (referenced but not defined in product.prisma)
 export interface User {
@@ -156,11 +186,11 @@ export interface UpdateContainerInput {
   isEmpty?: boolean;
 }
 
-export interface CreateProductionBatchInput {
+export interface CreateFermentationInput {
   userId: string;
   productId?: string;
   batchType: string;
-  batchNumber?: string;
+  batchName?: string;
   startDate?: Date;
   endDate?: Date;
   volumeGallons?: number;
@@ -168,10 +198,10 @@ export interface CreateProductionBatchInput {
   notes?: string;
 }
 
-export interface UpdateProductionBatchInput {
+export interface UpdateFermentationInput {
   productId?: string;
   batchType?: string;
-  batchNumber?: string;
+  batchName?: string;
   startDate?: Date;
   endDate?: Date;
   volumeGallons?: number;
@@ -218,11 +248,11 @@ export interface ContainerFilters {
   isEmpty?: boolean;
 }
 
-export interface ProductionBatchFilters {
+export interface FermentationFilters {
   userId?: string;
   productId?: string;
   batchType?: string;
-  batchNumber?: string;
+  batchName?: string;
 }
 
 export interface TransactionFilters {

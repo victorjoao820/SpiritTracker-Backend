@@ -14,13 +14,12 @@ import {
   deleteFermentation
 } from '../controllers/fermentationController';
 
-
 const router = express.Router();
 // Fermentation routes
 router.get('/', authenticateToken, getAllFermentations);
 router.get('/:id', authenticateToken, getFermentationById);
 router.post('/',  authenticateToken, validateFermentationBatch, handleValidationErrors, createFermentation);
-router.put('/:id', authenticateToken, validateFermentationBatchUpdate, handleValidationErrors, updateFermentation);
+router.put('/:id', authenticateToken,validateFermentationBatchUpdate, handleValidationErrors, updateFermentation);
 router.delete('/:id', authenticateToken, deleteFermentation);
 
 export default router;

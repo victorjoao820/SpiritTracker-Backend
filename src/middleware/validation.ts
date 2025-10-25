@@ -63,45 +63,58 @@ export const validateBulkContainers = [
 // Fermentation batch validation rules
 export const validateFermentationBatch = [
   body('batchName').notEmpty().trim().withMessage('Batch name is required'),
+  // body('fermenterId').optional().custom(isCUID).withMessage('Fermentation ID must be valid CUID'),
   body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
   body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
   body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
   body('startSG').optional().isNumeric().withMessage('Original gravity must be a number'),
-  body('finalGravity').optional().isNumeric().withMessage('Final gravity must be a number'),
-  body('ingredients').optional().trim(),
+  body('finalFG').optional().isNumeric().withMessage('Final gravity must be a number'),
+  body('ingredient').optional().trim(),
   body('notes').optional().trim(),
   // body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
 ];
 
 export const validateFermentationBatchUpdate = [
   body('batchName').optional().trim(),
+  // body('fermenterId').optional().custom(isCUID).withMessage('Fermentation ID must be valid CUID'),
   body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
   body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
   body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
-  body('originalGravity').optional().isNumeric().withMessage('Original gravity must be a number'),
-  body('finalGravity').optional().isNumeric().withMessage('Final gravity must be a number'),
-  body('ingredients').optional().trim(),
+  body('startSG').optional().isNumeric().withMessage('Original gravity must be a number'),
+  body('finalFG').optional().isNumeric().withMessage('Final gravity must be a number'),
+  body('ingredient').optional().trim(),
   body('notes').optional().trim(),
   // body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
 ];
 
 export const validateDistillationBatch = [
-  body('batchNumber').notEmpty().trim().withMessage('Batch number is required'),
+  body('batchName').notEmpty().trim().withMessage('Batch number is required'),
   body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
-  body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
-  body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
-  body('proof').optional().isNumeric().withMessage('Proof must be a number'),
+  body('fermentationId').optional().custom(isCUID).withMessage('Fermentation ID must be valid CUID'),
+  body('chargeVolumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
+  body('yieldVolumeGallons').optional().isNumeric().withMessage('Charge Yield Volume must be a number'),
+  body('chargeProof').optional().isNumeric().withMessage('Charge Proof must be a number'),
+  body('yieldProof').optional().isNumeric().withMessage('Yield Proof must be a number'),
+  body('chargeTemperature').optional().isNumeric().withMessage('Charge Temperature must be a number'),
+  body('yieldTemperature').optional().isNumeric().withMessage('Yield Temperature must be a number'),
+  body('productId').optional().custom(isCUID).withMessage('Product ID must be valid CUID'),
+  body('storeYieldContainer').optional().custom(isCUID).withMessage('Store Yield Container ID must be valid CUID'),
   body('notes').optional().trim(),
-  body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
+  // body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
 ];
 export const validateDistillationBatchUpdate = [
-  body('batchNumber').optional().trim(),
+  body('batchName').notEmpty().trim().withMessage('Batch number is required'),
   body('startDate').optional().isISO8601().withMessage('Start date must be valid date'),
-  body('endDate').optional().isISO8601().withMessage('End date must be valid date'),
-  body('volumeGallons').optional().isNumeric().withMessage('Volume must be a number'),
-  body('proof').optional().isNumeric().withMessage('Proof must be a number'),
+  body('fermentationId').optional().custom(isCUID).withMessage('Fermentation ID must be valid CUID'),
+  body('chargeVolumeGallons').optional().isNumeric().withMessage('Charge Volume must be a number'),
+  body('yieldVolumeGallons').optional().isNumeric().withMessage('Yield Volume must be a number'),
+  body('chargeProof').optional().isNumeric().withMessage('Charge Proof must be a number'),
+  body('yieldProof').optional().isNumeric().withMessage('Yield Proof must be a number'),
+  body('chargeTemperature').optional().isNumeric().withMessage('Charge Temperature must be a number'),
+  body('yieldTemperature').optional().isNumeric().withMessage('Yield Temperature must be a number'),
+  body('productId').optional().custom(isCUID).withMessage('Product ID must be valid CUID'),
+  body('storeYieldContainer').optional().custom(isCUID).withMessage('Store Yield Container ID must be valid CUID'),
   body('notes').optional().trim(),
-  body('status').optional().isIn(['IN_PROGRESS', 'COMPLETED', 'CANCELLED']).withMessage('Status must be valid')
 ];
 
 

@@ -26,7 +26,7 @@ export const getAllDistillations = async (req: AuthenticatedRequest, res: Respon
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true,
             mashBill: true
           }
@@ -69,7 +69,7 @@ export const getDistillationById = async (req: AuthenticatedRequest, res: Respon
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true,
             mashBill: true
           }
@@ -102,17 +102,17 @@ export const createDistillation = async (req: AuthenticatedRequest, res: Respons
     const {
       fermentationId,
       productId,
+      storeYieldContainer,
       batchType,
-      batchNumber,
+      batchName,
       startDate,
       endDate,
-      volumeGallons,
       chargeProof,
-      yeildProof,
+      yieldProof,
       chargeTemperature,
-      yeildTemperature,
+      yieldTemperature,
       chargeVolumeGallons,
-      yeildVolumeGallons,
+      yieldVolumeGallons,
       notes
     } = req.body;
 
@@ -120,17 +120,17 @@ export const createDistillation = async (req: AuthenticatedRequest, res: Respons
       data: {
         fermentationId: fermentationId || null,
         productId: productId || null,
+        storeYieldContainer: storeYieldContainer || null,
         batchType: batchType || 'DISTILLATION',
-        batchNumber: batchNumber || null,
+        batchName: batchName || null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-        volumeGallons: volumeGallons ? parseFloat(volumeGallons) : null,
         chargeProof: chargeProof ? parseFloat(chargeProof) : null,
-        yeildProof: yeildProof ? parseFloat(yeildProof) : null,
+        yieldProof: yieldProof ? parseFloat(yieldProof) : null,
         chargeTemperature: chargeTemperature ? parseFloat(chargeTemperature) : null,
-        yeildTemperature: yeildTemperature ? parseFloat(yeildTemperature) : null,
+        yieldTemperature: yieldTemperature ? parseFloat(yieldTemperature) : null,
         chargeVolumeGallons: chargeVolumeGallons ? parseFloat(chargeVolumeGallons) : null,
-        yeildVolumeGallons: yeildVolumeGallons ? parseFloat(yeildVolumeGallons) : null,
+        yieldVolumeGallons: yieldVolumeGallons ? parseFloat(yieldVolumeGallons) : null,
         notes: notes || null,
         userId
       },
@@ -145,7 +145,7 @@ export const createDistillation = async (req: AuthenticatedRequest, res: Respons
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true,
             mashBill: true
           }
@@ -175,34 +175,35 @@ export const updateDistillation = async (req: AuthenticatedRequest, res: Respons
     const {
       fermentationId,
       productId,
+      storeYieldContainer,
       batchType,
-      batchNumber,
+      batchName,
       startDate,
       endDate,
-      volumeGallons,
       chargeProof,
-      yeildProof,
+      yieldProof,
       chargeTemperature,
-      yeildTemperature,
+      yieldTemperature,
       chargeVolumeGallons,
-      yeildVolumeGallons,
+      yieldVolumeGallons,
       status,
       notes
     } = req.body;
 
+
     if (fermentationId !== undefined) updateData.fermentationId = fermentationId || null;
     if (productId !== undefined) updateData.productId = productId || null;
+    if (storeYieldContainer !== undefined) updateData.storeYieldContainer = storeYieldContainer || null;
     if (batchType !== undefined) updateData.batchType = batchType;
-    if (batchNumber !== undefined) updateData.batchNumber = batchNumber || null;
+    if (batchName !== undefined) updateData.batchName = batchName || null;
     if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
     if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
-    if (volumeGallons !== undefined) updateData.volumeGallons = volumeGallons ? parseFloat(volumeGallons) : null;
     if (chargeProof !== undefined) updateData.chargeProof = chargeProof ? parseFloat(chargeProof) : null;
-    if (yeildProof !== undefined) updateData.yeildProof = yeildProof ? parseFloat(yeildProof) : null;
+    if (yieldProof !== undefined) updateData.yieldProof = yieldProof ? parseFloat(yieldProof) : null;
     if (chargeTemperature !== undefined) updateData.chargeTemperature = chargeTemperature ? parseFloat(chargeTemperature) : null;
-    if (yeildTemperature !== undefined) updateData.yeildTemperature = yeildTemperature ? parseFloat(yeildTemperature) : null;
+    if (yieldTemperature !== undefined) updateData.yieldTemperature = yieldTemperature ? parseFloat(yieldTemperature) : null;
     if (chargeVolumeGallons !== undefined) updateData.chargeVolumeGallons = chargeVolumeGallons ? parseFloat(chargeVolumeGallons) : null;
-    if (yeildVolumeGallons !== undefined) updateData.yeildVolumeGallons = yeildVolumeGallons ? parseFloat(yeildVolumeGallons) : null;
+    if (yieldVolumeGallons !== undefined) updateData.yieldVolumeGallons = yieldVolumeGallons ? parseFloat(yieldVolumeGallons) : null;
     if (status !== undefined) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes || null;
 
@@ -231,7 +232,7 @@ export const updateDistillation = async (req: AuthenticatedRequest, res: Respons
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true,
             mashBill: true
           }

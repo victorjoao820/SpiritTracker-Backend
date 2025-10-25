@@ -41,7 +41,7 @@ export const getAllTransactions = async (req: AuthenticatedRequest, res: Respons
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         },
@@ -103,7 +103,7 @@ export const getTransactionById = async (req: AuthenticatedRequest, res: Respons
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         },
@@ -174,7 +174,7 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
         fermentation: {
           select: {
             id: true,
-            batchNumber: true,
+            batchName: true,
             status: true
           }
         },

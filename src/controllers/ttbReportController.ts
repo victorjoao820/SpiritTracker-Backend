@@ -274,14 +274,14 @@ export const getDistillationBatches = async (req: AuthenticatedRequest, res: Res
             lte: endDate
           }
         },
-        _sum: { volumeGallons: true }
+        _sum: { yieldVolumeGallons: true }
       })
     ]);
 
     res.json({
       batches: distillationBatches,
       totalBatches: distillationBatches.length,
-      totalVolume: totalVolume._sum.volumeGallons || 0,
+      totalVolume: totalVolume?._sum.yieldVolumeGallons || 0,
       period: {
         startDate,
         endDate
@@ -340,7 +340,7 @@ export const generateMonthlyProductionReport = async (req: AuthenticatedRequest,
         }
       }).then(batches => ({
         batches,
-        totalVolume: batches.reduce((sum, batch) => sum + Number(batch.volumeGallons || 0), 0)
+        totalVolume: batches.reduce((sum, batch) => sum + Number(batch.yieldVolumeGallons || 0), 0)
       })),
       prisma.bottlingRun.findMany({
         where: {
