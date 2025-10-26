@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { TRANSACTION_TYPES } from '../constants';
 import { Container, TransactionType } from '@prisma/client';
 
+
 // Transfer spirit between containers
 export const transferSpirit = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -14,7 +15,8 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
         message: 'Authentication required'
       });
     }
-    const { sourceContainerId, destinationContainerId, amount, unit } = req.body;
+    const { sourceContainerId, destinationContainerId, amount, transferUnit } = req.body;
+    // const { sourceContainerId, destinationContainerId, amount, transferAll, transferUnit } = req.body;
     // Get source container
     const sourceContainer: Container | null = await prisma.container.findFirst({
       where: { id: sourceContainerId, userId }
@@ -36,7 +38,7 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
     // Calculate transfer amounts
     const transferAmount = parseFloat(amount);
     const sourceProof = sourceContainer.proof ? parseFloat(sourceContainer.proof.toString()) : 0;
-    const proofGallonsTransferred = unit === 'gallons' ? transferAmount * (sourceProof / 100) : transferAmount;
+    const proofGallonsTransferred = transferUnit === 'gallons' ? transferAmount * (sourceProof / 100) : transferAmount;
 
     // Update source container
     const sourceNetWeight = sourceContainer.netWeight ? parseFloat(sourceContainer.netWeight.toString()) : 0;
@@ -169,7 +171,7 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
 // Adjust container contents
 export const adjustContents = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { containerId, adjustmentType, amount, notes } = req.body;
+    const { containerId, method, amount, wineGallons } = req.body;
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -188,7 +190,7 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
 
     const adjustmentAmount = parseFloat(amount);
     const containerNetWeight = container.netWeight ? parseFloat(container.netWeight.toString()) : 0;
-    const newNetWeight = Math.max(0, containerNetWeight - (adjustmentAmount * 8.3)); // Convert gallons to lbs
+    const newNetWeight = method === 'add' ? Math.max(0, containerNetWeight + adjustmentAmount) : Math.max(0, containerNetWeight - adjustmentAmount); // Convert gallons to lbs
 
     // Update container
     const updatedContainer = await prisma.container.update({
@@ -205,8 +207,8 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
         userId,
         transactionType: TRANSACTION_TYPES.SAMPLE_ADJUST as TransactionType,
         containerId,
-        volumeGallons: -adjustmentAmount,
-        notes: `${adjustmentType} adjustment: ${notes}`
+        volumeGallons: method === 'add' ? wineGallons : -wineGallons,
+        notes: `${method} adjustment: ${wineGallons} WG are ${method} from container!`
       }
     });
 
@@ -223,7 +225,7 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
 // Bottle spirit from container
 export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { containerId, bottlingType, bottleSize, numberOfBottles } = req.body;
+    const { containerId, bottleSize, numberOfBottles, remainderAction, remainderLbs } = req.body;
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -231,6 +233,8 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
         message: 'Authentication required'
       });
     }
+
+    console.log("Bottling request:", req.body);
 
     const container = await prisma.container.findFirst({
       where: { id: containerId, userId }
@@ -242,16 +246,22 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
 
     // Calculate bottle volume (simplified)
     const bottleVolumeMap = {
-      '375ml': 0.375,
-      '750ml': 0.75,
-      '1L': 1.0,
-      '1.75L': 1.75
+      '375': 0.375,
+      '750': 0.75,
+      '1000': 1.0,
+      '1750': 1.75,
+      '50': 0.05
     };
-
+    const bottleNameMap = {
+      '375': '375mL',
+      '750': '750mL',
+      '1000': '1L',
+      '1750': '1.75L',
+      '50': '50mL'
+    }
     const bottleVolume = bottleVolumeMap[bottleSize as keyof typeof bottleVolumeMap] || 0.75;
     const totalBottledVolume = bottleVolume * parseInt(numberOfBottles);
-    const containerNetWeight = container.netWeight ? parseFloat(container.netWeight.toString()) : 0;
-    const newNetWeight = bottlingType === 'empty' ? 0 : Math.max(0, containerNetWeight - (totalBottledVolume * 8.3)); // Convert gallons to lbs
+    const newNetWeight = remainderLbs; // Convert gallons to lbs
 
     // Update container
     const updatedContainer = await prisma.container.update({
@@ -262,14 +272,24 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
       }
     });
 
+    const transactionType = {
+      'keep': TRANSACTION_TYPES.BOTTLE_KEEP,
+      'empty': TRANSACTION_TYPES.BOTTLE_EMPTY,
+      'loss': TRANSACTION_TYPES.BOTTLING_LOSS,
+      'gain': TRANSACTION_TYPES.BOTTLING_GAIN
+    };
+    let adjustmentAmount = 0;
+    if(remainderAction != 'keep'){
+      adjustmentAmount = Number(req.body?.adjustmentAmount);
+    }
     // Create transaction log
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: (bottlingType === 'partial' ? TRANSACTION_TYPES.BOTTLE_PARTIAL : TRANSACTION_TYPES.BOTTLE_EMPTY) as TransactionType,
+        transactionType: transactionType[remainderAction as keyof typeof transactionType] as TransactionType,
         containerId,
         volumeGallons: -totalBottledVolume,
-        notes: `Bottled ${numberOfBottles} ${bottleSize} bottles`
+        notes: remainderAction === 'keep' ? `Bottled ${bottleNameMap[bottleSize as keyof typeof bottleNameMap]} x ${numberOfBottles} bottles`: `Bottled ${bottleNameMap[bottleSize as keyof typeof bottleNameMap]}ml x ${numberOfBottles} bottles, ${adjustmentAmount} WG are ${remainderAction} from container`
       }
     });
 

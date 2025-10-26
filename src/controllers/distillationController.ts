@@ -30,6 +30,13 @@ export const getAllDistillations = async (req: AuthenticatedRequest, res: Respon
             status: true,
             mashBill: true
           }
+        },
+        container:{
+          select:{
+            id:true,
+            name:true,
+            status: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -72,6 +79,13 @@ export const getDistillationById = async (req: AuthenticatedRequest, res: Respon
             batchName: true,
             status: true,
             mashBill: true
+          }
+        },
+        container:{
+          select:{
+            id:true,
+            name:true,
+            status: true
           }
         }
       }
@@ -235,6 +249,13 @@ export const updateDistillation = async (req: AuthenticatedRequest, res: Respons
             batchName: true,
             status: true,
             mashBill: true
+          }
+        },
+        container:{
+          select:{
+            id:true,
+            name:true,
+            status: true
           }
         }
       }

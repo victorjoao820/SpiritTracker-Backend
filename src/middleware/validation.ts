@@ -147,7 +147,8 @@ export const validateContainerTransfer = [
   body('sourceContainerId').custom(isCUID).withMessage('Source container ID must be valid CUID'),
   body('destinationContainerId').custom(isCUID).withMessage('Destination container ID must be valid CUID'),
   body('amount').isNumeric().withMessage('Transfer amount must be a number'),
-  body('unit').optional().isIn(['gallons', 'weight', 'proofGallons']).withMessage('Unit must be valid')
+  body('transferAll').isBoolean().withMessage('Transfer all must be a boolean'),
+  body('transferUnit').optional().isIn(['gallons', 'weight', 'proofGallons']).withMessage('Unit must be valid')
 ];
 
 export const validateProofDown = [
@@ -158,16 +159,19 @@ export const validateProofDown = [
 
 export const validateAdjustment = [
   body('containerId').custom(isCUID).withMessage('Container ID must be valid CUID'),
-  body('adjustmentType').isIn(['sample', 'loss', 'gain']).withMessage('Adjustment type must be valid'),
+  body('method').isIn(['add', 'remove']).withMessage('Adjustment type must be valid'),
   body('amount').isNumeric().withMessage('Adjustment amount must be a number'),
-  body('notes').optional().trim()
+  body('wineGallons').isNumeric().withMessage('Wine gallons must be a number'),
+  // body('notes').optional().trim()
 ];
 
 export const validateBottling = [
   body('containerId').custom(isCUID).withMessage('Container ID must be valid CUID'),
-  body('bottlingType').isIn(['partial', 'empty']).withMessage('Bottling type must be valid'),
-  body('bottleSize').isIn(['375ml', '750ml', '1L', '1.75L']).withMessage('Bottle size must be valid'),
-  body('numberOfBottles').isInt().withMessage('Number of bottles must be an integer')
+  body('remainderLbs').isNumeric().withMessage('Remainder Lbs must be a number'),
+  body('bottleSize').isIn(['375', '750', '1000', '1750, 50']).withMessage('Bottle size must be valid'),
+  body('numberOfBottles').isInt().withMessage('Number of bottles must be an integer'),
+  body('remainderAction').isIn(['keep', 'empty', 'loss', 'gain']).withMessage('Remainder action must be valid'),
+  body('bottledWG').isNumeric().withMessage('Bottled WG must be a number')
 ];
 
 export const validateAccountChange = [
