@@ -148,7 +148,6 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
 // Proof down spirit
 export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    console.log("PROOF DOWN REQUEST:", req.body);
     const userId = req.user?.userId;
     if (!userId) {
       return res.status(401).json({
@@ -304,7 +303,6 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
       });
     }
 
-    console.log("Bottling request:", req.body);
 
     const container = await prisma.container.findFirst({
       where: { id: containerId, userId }
