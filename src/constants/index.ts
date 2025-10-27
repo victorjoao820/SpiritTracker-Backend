@@ -9,6 +9,17 @@ export const CONTAINER_TYPES = {
   FERMENTER: 'FERMENTER'
 };
 
+// Container capacity in wine gallons
+export const CONTAINER_CAPACITIES_GALLONS: Record<string, number> = {
+  wooden_barrel: 53,
+  metal_drum: 55,
+  square_tank: 275,
+  tote: 250,
+  five_gallon_tote: 5,
+  still: 100,
+  fermenter: 500,
+};
+
 export const CONTAINER_STATUS = {
   EMPTY: 'EMPTY',
   FILLED: 'FILLED',

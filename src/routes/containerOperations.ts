@@ -1,7 +1,7 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/authMiddleware';
 import { 
-  validateTransfer,
+  validateContainerTransfer,
   validateProofDown,
   validateAdjustment,
   validateBottling,
@@ -19,7 +19,7 @@ import {
 const router = express.Router();
 
 // Transfer spirit between containers
-router.post('/transfer', authenticateToken, validateTransfer, handleValidationErrors, transferSpirit);
+router.post('/transfer', authenticateToken, validateContainerTransfer, handleValidationErrors, transferSpirit);
 
 // Proof down spirit
 router.post('/proof-down',  authenticateToken, validateProofDown, handleValidationErrors, proofDownSpirit);

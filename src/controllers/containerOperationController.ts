@@ -1,8 +1,21 @@
 import { Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
-import { TRANSACTION_TYPES } from '../constants';
+import { TRANSACTION_TYPES, CONTAINER_CAPACITIES_GALLONS } from '../constants';
 import { Container, TransactionType } from '@prisma/client';
+
+// Helper function to calculate spirit density (simplified for validation)
+const calculateSpiritDensity = (proof: number): number => {
+  // Simplified density calculation
+  const WATER_DENSITY = 8.328; // lbs per gallon at 60°F
+  const ETHANOL_DENSITY = 6.61; // lbs per gallon at 60°F
+  
+  if (proof <= 0) return WATER_DENSITY;
+  
+  // Linear interpolation between water and ethanol densities
+  const ethanolFraction = proof / 200; // Convert proof to fraction
+  return (ethanolFraction * ETHANOL_DENSITY) + ((1 - ethanolFraction) * WATER_DENSITY);
+};
 
 
 // Transfer spirit between containers
@@ -15,7 +28,8 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
         message: 'Authentication required'
       });
     }
-    const { sourceContainerId, destinationContainerId, amount, transferUnit } = req.body;
+    const { sourceContainerId, destinationContainerId, transferAll, amount, transAmountWG } = req.body;
+    //Unit == Lbs//
     // const { sourceContainerId, destinationContainerId, amount, transferAll, transferUnit } = req.body;
     // Get source container
     const sourceContainer: Container | null = await prisma.container.findFirst({
@@ -35,14 +49,44 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
       return res.status(404).json({ error: 'Destination container not found' });
     }
 
+    // Validate destination container capacity
+    if (destinationContainer.type) {
+      const destinationCapacity = CONTAINER_CAPACITIES_GALLONS[destinationContainer.type] || 0;
+      
+      if (destinationCapacity > 0) {
+        // Calculate current wine gallons in destination
+        const destNetWeight = destinationContainer.netWeight ? parseFloat(destinationContainer.netWeight.toString()) : 0;
+        const destProof = destinationContainer.proof ? parseFloat(destinationContainer.proof.toString()) : 0;
+        const destDensity = calculateSpiritDensity(destProof);
+        const currentWineGallons = destNetWeight / destDensity;
+        
+        // Get transfer wine gallons
+        const transferWineGallons = parseFloat(transAmountWG);
+        
+        // Check if transfer exceeds capacity
+        const newTotalGallons = currentWineGallons + transferWineGallons;
+        
+        if (newTotalGallons > destinationCapacity) {
+          return res.status(400).json({ 
+            error: `Transfer would exceed destination capacity. Current: ${currentWineGallons.toFixed(2)} WG, Transfer: ${transferWineGallons.toFixed(2)} WG, Total: ${newTotalGallons.toFixed(2)} WG, Capacity: ${destinationCapacity.toFixed(2)} WG` 
+          });
+        }
+      }
+    }
+
     // Calculate transfer amounts
-    const transferAmount = parseFloat(amount);
     const sourceProof = sourceContainer.proof ? parseFloat(sourceContainer.proof.toString()) : 0;
-    const proofGallonsTransferred = transferUnit === 'gallons' ? transferAmount * (sourceProof / 100) : transferAmount;
+
+
+    const transferAmount = parseFloat(amount);      //Lbs
+    const proofGallonsTransferred = parseFloat(transAmountWG) * sourceProof / 100;
+
+
+
 
     // Update source container
     const sourceNetWeight = sourceContainer.netWeight ? parseFloat(sourceContainer.netWeight.toString()) : 0;
-    const updatedSourceNetWeight = Math.max(0, sourceNetWeight - (transferAmount * 8.3)); // Convert gallons to lbs
+    const updatedSourceNetWeight = Math.max(0, sourceNetWeight - transferAmount ); // Convert gallons to lbs
     const updatedSource = await prisma.container.update({
       where: { id: sourceContainerId },
       data: {
@@ -53,13 +97,16 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
 
     // Update destination container
     const destNetWeight = destinationContainer.netWeight ? parseFloat(destinationContainer.netWeight.toString()) : 0;
-    const updatedDestNetWeight = destNetWeight + (transferAmount * 8.3); // Convert gallons to lbs
+    const destProof = destinationContainer.proof ? parseFloat(destinationContainer.proof.toString()) : 0;
+    const updatedDestNetWeight = destNetWeight + transferAmount ; // Convert gallons to lbs
+    const newDestProof = (destNetWeight * destProof + transferAmount * sourceProof ) / (destNetWeight + transferAmount); // Calculate new proof
+
     const updatedDest = await prisma.container.update({
       where: { id: destinationContainerId },
       data: {
         netWeight: updatedDestNetWeight,
         status: 'FILLED',
-        proof: sourceProof, // Assume same proof
+        proof: newDestProof.toFixed(2), // Assume same proof
         productId: sourceContainer.productId
       }
     });
@@ -70,9 +117,9 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
         userId,
         transactionType: TRANSACTION_TYPES.TRANSFER_OUT as TransactionType,
         containerId: sourceContainerId,
-        volumeGallons: -transferAmount,
+        volumeGallons: -parseFloat(transAmountWG),
         proofGallons: -proofGallonsTransferred,
-        notes: `Transferred ${transferAmount} gallons to container ${destinationContainerId}`
+        notes: `Transferred ${parseFloat(transAmountWG)} WG to container ${destinationContainerId} ${transferAll ? ', All Transferred!!!' : ''}`
       }
     });
 
@@ -81,9 +128,9 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
         userId,
         transactionType: TRANSACTION_TYPES.TRANSFER_IN as TransactionType,
         containerId: destinationContainerId,
-        volumeGallons: transferAmount,
+        volumeGallons: parseFloat(transAmountWG),
         proofGallons: proofGallonsTransferred,
-        notes: `Received ${transferAmount} gallons from container ${sourceContainerId}`
+        notes: `Received ${parseFloat(transAmountWG)} WG from container ${sourceContainerId} ${transferAll ? ', All Transferred!!!' : ''}`
       }
     });
 
@@ -190,6 +237,29 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
 
     const adjustmentAmount = parseFloat(amount);
     const containerNetWeight = container.netWeight ? parseFloat(container.netWeight.toString()) : 0;
+
+    // Validate capacity when adding
+    if (method === 'add' && container.type) {
+      const containerCapacity = CONTAINER_CAPACITIES_GALLONS[container.type] || 0;
+      
+      if (containerCapacity > 0) {
+        const containerProof = container.proof ? parseFloat(container.proof.toString()) : 0;
+        const destDensity = calculateSpiritDensity(containerProof);
+        const currentWineGallons = containerNetWeight / destDensity;
+        
+        // Get adjustment wine gallons
+        const adjustmentWineGallons = parseFloat(wineGallons);
+        
+        // Check if adjustment exceeds capacity
+        const newTotalGallons = currentWineGallons + adjustmentWineGallons;
+        
+        if (newTotalGallons > containerCapacity) {
+          return res.status(400).json({ 
+            error: `Adjustment would exceed container capacity. Current: ${currentWineGallons.toFixed(2)} WG, Adjustment: ${adjustmentWineGallons.toFixed(2)} WG, Total: ${newTotalGallons.toFixed(2)} WG, Capacity: ${containerCapacity.toFixed(2)} WG` 
+          });
+        }
+      }
+    }
     const newNetWeight = method === 'add' ? Math.max(0, containerNetWeight + adjustmentAmount) : Math.max(0, containerNetWeight - adjustmentAmount); // Convert gallons to lbs
 
     // Update container

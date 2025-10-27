@@ -147,8 +147,10 @@ export const validateContainerTransfer = [
   body('sourceContainerId').custom(isCUID).withMessage('Source container ID must be valid CUID'),
   body('destinationContainerId').custom(isCUID).withMessage('Destination container ID must be valid CUID'),
   body('amount').isNumeric().withMessage('Transfer amount must be a number'),
+  body('transAmountWG').isNumeric().withMessage('Transfer amount in weight must be a number'),
   body('transferAll').isBoolean().withMessage('Transfer all must be a boolean'),
-  body('transferUnit').optional().isIn(['gallons', 'weight', 'proofGallons']).withMessage('Unit must be valid')
+  body('proof').isNumeric().withMessage('Proof must be a number'),
+  // body('transferUnit').optional().isIn(['gallons', 'weight', 'proofGallons']).withMessage('Unit must be valid')
 ];
 
 export const validateProofDown = [
