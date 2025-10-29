@@ -34,6 +34,7 @@ export const getAllTransactions = async (req: AuthenticatedRequest, res: Respons
         container: {
           select: {
             id: true,
+            name: true,
             type: true,
             netWeight: true
           }
@@ -96,6 +97,7 @@ export const getTransactionById = async (req: AuthenticatedRequest, res: Respons
         container: {
           select: {
             id: true,
+            name: true,
             type: true,
             netWeight: true
           }
@@ -156,7 +158,7 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
         containerId: containerId || null,
         fermentationId: fermentationId || null,
         productId: productId || null,
-        volumeGallons: volumeGallons ? parseFloat(volumeGallons) : null,
+        volumeGallons: volumeGallons ? parseFloat(volumeGallons).toFixed(2) : null,
         proof: proof ? parseFloat(proof) : null,
         temperatureFahrenheit: temperatureFahrenheit ? parseFloat(temperatureFahrenheit) : null,
         notes: notes || null,
@@ -167,6 +169,7 @@ export const createTransaction = async (req: AuthenticatedRequest, res: Response
         container: {
           select: {
             id: true,
+            name: true,
             type: true,
             netWeight: true
           }

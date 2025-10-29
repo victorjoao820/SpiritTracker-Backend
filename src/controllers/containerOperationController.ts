@@ -3,20 +3,8 @@ import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { TRANSACTION_TYPES, CONTAINER_CAPACITIES_GALLONS } from '../constants';
 import { Container, TransactionType } from '@prisma/client';
-
-// Helper function to calculate spirit density (simplified for validation)
-const calculateSpiritDensity = (proof: number): number => {
-  // Simplified density calculation
-  const WATER_DENSITY = 8.328; // lbs per gallon at 60°F
-  const ETHANOL_DENSITY = 6.61; // lbs per gallon at 60°F
-  
-  if (proof <= 0) return WATER_DENSITY;
-  
-  // Linear interpolation between water and ethanol densities
-  const ethanolFraction = proof / 200; // Convert proof to fraction
-  return (ethanolFraction * ETHANOL_DENSITY) + ((1 - ethanolFraction) * WATER_DENSITY);
-};
-
+// @ts-expect-error - helpers.js needs conversion to TypeScript
+import { calculateSpiritDensity, calcGallonsFromWeight, calculateBottledVolume }  from '../utils/helpers';
 
 // Transfer spirit between containers
 export const transferSpirit = async (req: AuthenticatedRequest, res: Response) => {
@@ -81,9 +69,6 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
     const transferAmount = parseFloat(amount);      //Lbs
     const proofGallonsTransferred = parseFloat(transAmountWG) * sourceProof / 100;
 
-
-
-
     // Update source container
     const sourceNetWeight = sourceContainer.netWeight ? parseFloat(sourceContainer.netWeight.toString()) : 0;
     const updatedSourceNetWeight = Math.max(0, sourceNetWeight - transferAmount ); // Convert gallons to lbs
@@ -117,9 +102,11 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
         userId,
         transactionType: TRANSACTION_TYPES.TRANSFER_OUT as TransactionType,
         containerId: sourceContainerId,
-        volumeGallons: -parseFloat(transAmountWG),
-        proofGallons: -proofGallonsTransferred,
-        notes: `Transferred ${parseFloat(transAmountWG)} WG to container ${destinationContainerId} ${transferAll ? ', All Transferred!!!' : ''}`
+        productId: sourceContainer.productId,
+        volumeGallons: -parseFloat(transAmountWG).toFixed(2),
+        proofGallons: -proofGallonsTransferred.toFixed(2),
+        proof: sourceProof,
+        notes: `Transferred ${parseFloat(transAmountWG).toFixed(2)} WG to <${updatedDest.name}> ${transferAll ? ', All Transferred!!!' : ''}`
       }
     });
 
@@ -128,9 +115,11 @@ export const transferSpirit = async (req: AuthenticatedRequest, res: Response) =
         userId,
         transactionType: TRANSACTION_TYPES.TRANSFER_IN as TransactionType,
         containerId: destinationContainerId,
-        volumeGallons: parseFloat(transAmountWG),
-        proofGallons: proofGallonsTransferred,
-        notes: `Received ${parseFloat(transAmountWG)} WG from container ${sourceContainerId} ${transferAll ? ', All Transferred!!!' : ''}`
+        productId: sourceContainer.productId,
+        volumeGallons: parseFloat(transAmountWG).toFixed(2),
+        proofGallons: proofGallonsTransferred.toFixed(2),
+        proof: sourceProof,
+        notes: `Received ${parseFloat(transAmountWG).toFixed(2)} WG from <${updatedSource.name}> ${transferAll ? ', All Transferred!!!' : ''}`
       }
     });
 
@@ -165,33 +154,28 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
       return res.status(404).json({ error: 'Container not found' });
     }
 
-    const oldProof = container.proof ? parseFloat(container.proof.toString()) : 0;
+    const oldProof = container.proof ? Number(container.proof) : 0;
     const newProof = parseFloat(targetProof);
-
+ 
     if (newProof >= oldProof) {
       return res.status(400).json({ error: 'Target proof must be lower than current proof' });
     }
+    const oldNetWeight = Number(container.netWeight);
+    const {proofGallons} = calcGallonsFromWeight(oldProof, oldNetWeight);
 
     // Calculate new net weight from final wine gallons
-    const newNetWeight = Number(container.netWeight) * oldProof /newProof;
-
+    const newNetWeight = proofGallons* calculateSpiritDensity(newProof) *100 / newProof;
+    const addWaterGallons = newNetWeight / calculateSpiritDensity(newProof) - oldNetWeight / calculateSpiritDensity(oldProof);
     // Update container with new values
     const updatedContainer = await prisma.container.update({
       where: { id: containerId },
       data: { 
         proof: newProof,
         netWeight: newNetWeight
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            description: true
-          }
-        }
       }
     });
+
+    // Calculate volume and proof gallons changes
 
     // Create transaction log
     await prisma.transaction.create({
@@ -199,8 +183,11 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
         userId,
         transactionType: TRANSACTION_TYPES.PROOF_DOWN as TransactionType,
         containerId,
+        productId: container.productId,
         proof: newProof,
-        notes: `Proofed down from ${oldProof} to ${newProof}`
+        proofGallons:0,
+        volumeGallons:newNetWeight - oldNetWeight,
+        notes: `Proof down ${oldProof} -> ${newProof}. NetWeight:${oldNetWeight}lbs -> ${newNetWeight.toFixed(2)}lbs, Add water:${addWaterGallons.toFixed(2)} WG, ProofGallons:${proofGallons.toFixed(2)}(unchanged), `
       }
     });
 
@@ -271,12 +258,19 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
     });
 
     // Create transaction log
+    const volumeGallons = method === 'add' ? wineGallons : -wineGallons;
+    const containerProof = container.proof ? parseFloat(container.proof.toString()) : 0;
+    const proofGallons = volumeGallons * containerProof / 100;
+    
     await prisma.transaction.create({
       data: {
         userId,
         transactionType: TRANSACTION_TYPES.SAMPLE_ADJUST as TransactionType,
         containerId,
-        volumeGallons: method === 'add' ? wineGallons : -wineGallons,
+        productId: container.productId,
+        proof: container.proof,
+        volumeGallons,
+        proofGallons,
         notes: `${method} adjustment: ${wineGallons} WG are ${method} from container!`
       }
     });
@@ -305,7 +299,16 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
 
 
     const container = await prisma.container.findFirst({
-      where: { id: containerId, userId }
+      where: { id: containerId, userId },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            description: true
+          }
+        }
+      }
     });
 
     if (!container) {
@@ -328,8 +331,9 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
       '50': '50mL'
     }
     const bottleVolume = bottleVolumeMap[bottleSize as keyof typeof bottleVolumeMap] || 0.75;
-    const totalBottledVolume = bottleVolume * parseInt(numberOfBottles);
+    const totalBottledVolume = calculateBottledVolume(bottleVolume , parseInt(numberOfBottles));
     const newNetWeight = remainderLbs; // Convert gallons to lbs
+
 
     // Update container
     const updatedContainer = await prisma.container.update({
@@ -350,13 +354,22 @@ export const bottleSpirit = async (req: AuthenticatedRequest, res: Response) => 
     if(remainderAction != 'keep'){
       adjustmentAmount = Number(req.body?.adjustmentAmount);
     }
+
+    // Calculate proof gallons
+    const containerProof = container.proof ? parseFloat(container.proof.toString()) : 0;
+    const proofGallons = -totalBottledVolume * containerProof / 100;
+
     // Create transaction log
     await prisma.transaction.create({
       data: {
         userId,
         transactionType: transactionType[remainderAction as keyof typeof transactionType] as TransactionType,
         containerId,
+        productId: container.productId,
+        proof: container.proof,
         volumeGallons: -totalBottledVolume,
+        proofGallons,
+
         notes: remainderAction === 'keep' ? `Bottled ${bottleNameMap[bottleSize as keyof typeof bottleNameMap]} x ${numberOfBottles} bottles`: `Bottled ${bottleNameMap[bottleSize as keyof typeof bottleNameMap]}ml x ${numberOfBottles} bottles, ${adjustmentAmount} WG are ${remainderAction} from container`
       }
     });

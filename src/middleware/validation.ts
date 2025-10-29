@@ -51,8 +51,8 @@ export const validateContainerUpdate = [
   body('netWeight').optional().isNumeric().withMessage('Net weight must be a number'),
   body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
   body('fillDate').optional().isISO8601().withMessage('Fill date must be valid date'),
-  body('location').optional().trim(),
-  body('notes').optional().trim()
+  // body('location').optional().trim(),
+  // body('notes').optional().trim()
 ];
 
 export const validateBulkContainers = [
