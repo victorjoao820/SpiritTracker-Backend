@@ -269,7 +269,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
               ? calcGallonsFromWeight(updateData.proof, updateData.netWeight || 0).proofGallons - calcGallonsFromWeight(containerData.proof, containerData.netWeight).proofGallons
               : 0,
             temperatureFahrenheit:updateData.temperatureFahrenheit,
-            notes,
+            notes,  
           }
         });
       }
