@@ -3,7 +3,6 @@ import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { TRANSACTION_TYPES, CONTAINER_CAPACITIES_GALLONS } from '../constants';
 import { Container, TransactionType } from '@prisma/client';
-// @ts-expect-error - helpers.js needs conversion to TypeScript
 import { calculateSpiritDensity, calcGallonsFromWeight, calculateBottledVolume }  from '../utils/helpers';
 
 // Transfer spirit between containers

@@ -3,9 +3,7 @@ import { prisma } from '../lib/prisma';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 import { Container, TransactionType } from '@prisma/client';
 import { TRANSACTION_TYPES } from '../constants';
-// @ts-expect-error - helpers.js needs conversion to TypeScript
 import { calcGallonsFromWeight, calculateSpiritDensity } from '../utils/helpers';
-
 // Get all containers for authenticated user
 export const getAllContainers = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -266,7 +264,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
               ? (Number(updateData.netWeight) - Number(containerData.netWeight)) / calculateSpiritDensity(Number(updateData.proof))
               : 0,
             proofGallons: (updateData.proof && containerData.proof && containerData.netWeight)
-              ? calcGallonsFromWeight(updateData.proof, updateData.netWeight || 0).proofGallons - calcGallonsFromWeight(containerData.proof, containerData.netWeight).proofGallons
+              ? calcGallonsFromWeight(updateData.proof, Number(updateData.netWeight) || 0).proofGallons - calcGallonsFromWeight(Number(containerData.proof), Number(containerData.netWeight)).proofGallons
               : 0,
             temperatureFahrenheit:updateData.temperatureFahrenheit,
             notes,  

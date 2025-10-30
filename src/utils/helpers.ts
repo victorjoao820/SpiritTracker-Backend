@@ -18,41 +18,41 @@ export const TTB_TEMPERATURE_CORRECTIONS = {
 // --- Helper Functions ---
 
 // Get TTB temperature correction factor
-export const getTTBTemperatureCorrection = (temperature, observedProof) => {
+export const getTTBTemperatureCorrection = (temperature: number, observedProof: number): number => {
   // Round temperature to nearest even number (TTB table uses even temperatures)
   const roundedTemp = Math.round(temperature / 2) * 2;
   const roundedProof = Math.round(observedProof / 5) * 5; // Round to nearest 5
   
   // Get the correction table for this temperature
-  const tempTable = TTB_TEMPERATURE_CORRECTIONS[roundedTemp];
+  const tempTable = TTB_TEMPERATURE_CORRECTIONS[roundedTemp as keyof typeof TTB_TEMPERATURE_CORRECTIONS];
   if (!tempTable) return 0; // No correction if temperature out of range
   
   // Get the correction factor for this proof
-  const correction = tempTable[roundedProof];
+  const correction = tempTable[roundedProof as keyof typeof tempTable];
   return correction || 0;
 };
 
 // Calculate true proof using TTB method
-export const calculateTrueProof = (observedProof, temperature) => {
+export const calculateTrueProof = (observedProof: number, temperature: number): number => {
   const correction = getTTBTemperatureCorrection(temperature, observedProof);
   return observedProof + correction;
 };
 
 // Calculate proof gallons using TTB method
-export const calculateProofGallonsTTB = (wineGallons, observedProof, temperature) => {
+export const calculateProofGallonsTTB = (wineGallons: number, observedProof: number, temperature: number): number => {
   const trueProof = calculateTrueProof(observedProof, temperature);
   return wineGallons * (trueProof / 100);
 };
 
 // TTB-compliant density calculation at 60°F
 // Since Snap 51 provides temperature-corrected proof readings, we use the proof directly
-export const calculateSpiritDensity = (proof) => {
+export const calculateSpiritDensity = (proof: number): number => {
   if (isNaN(proof) || proof < 0) proof = 0;
   if (proof === 0) return DENSITY_WATER_LBS_PER_GALLON;
   
   // TTB Table 5 density values for different proof levels at 60°F
   // These values are based on TTB Table 5 (Pounds per wine gallon)
-  const densityTable = {
+  const densityTable: Record<number, number> = {
     0: 8.32198,   // Water (approximate)
     1: 8.32198,
     2: 8.31574,
@@ -258,8 +258,9 @@ export const calculateSpiritDensity = (proof) => {
   };
   
   // For exact proof values, return the table value
-  if (densityTable[proof] !== undefined) {
-    return densityTable[proof];
+  const proofKey = Math.round(proof);
+  if (densityTable[proofKey] !== undefined) {
+    return densityTable[proofKey];
   }
   
   // For values between table entries, interpolate
@@ -278,10 +279,10 @@ export const calculateSpiritDensity = (proof) => {
 };
 
 // Calculate derived values from weight - using temperature-corrected proof from Snap 51
-export const calculateDerivedValuesFromWeight = (tareWeight, grossWeight, observedProof) => {
-  const tare = parseFloat(tareWeight) || 0;
-  const gross = parseFloat(grossWeight) || 0;
-  const prf = parseFloat(observedProof) || 0;
+export const calculateDerivedValuesFromWeight = (tareWeight: number | string, grossWeight: number | string, observedProof: number | string) => {
+  const tare = parseFloat(String(tareWeight)) || 0;
+  const gross = parseFloat(String(grossWeight)) || 0;
+  const prf = parseFloat(String(observedProof)) || 0;
   let netWeightLbs = 0;
   if (gross > tare) { netWeightLbs = gross - tare; } else { netWeightLbs = 0; }
   
@@ -301,10 +302,10 @@ export const calculateDerivedValuesFromWeight = (tareWeight, grossWeight, observ
   };
 };
 
-export const calculateDerivedValuesFromWineGallons = (wineGallons, observedProof, tareWeight, temperature = 60) => {
-  const wg = parseFloat(wineGallons) || 0;
-  const prf = parseFloat(observedProof) || 0;
-  const tare = parseFloat(tareWeight) || 0;
+export const calculateDerivedValuesFromWineGallons = (wineGallons: number | string, observedProof: number | string, tareWeight: number | string, temperature: number = 60) => {
+  const wg = parseFloat(String(wineGallons)) || 0;
+  const prf = parseFloat(String(observedProof)) || 0;
+  const tare = parseFloat(String(tareWeight)) || 0;
   const spiritDensity = calculateSpiritDensity(prf);
   const netWeightLbs = wg * spiritDensity;
   const grossWeightLbs = netWeightLbs + tare;
@@ -321,10 +322,10 @@ export const calculateDerivedValuesFromWineGallons = (wineGallons, observedProof
   };
 };
 
-export const calculateDerivedValuesFromProofGallons = (proofGallons, observedProof, tareWeight, temperature = 60) => {
-  const pg = parseFloat(proofGallons) || 0;
-  const prf = parseFloat(observedProof) || 0;
-  const tare = parseFloat(tareWeight) || 0;
+export const calculateDerivedValuesFromProofGallons = (proofGallons: number | string, observedProof: number | string, tareWeight: number | string, temperature: number = 60) => {
+  const pg = parseFloat(String(proofGallons)) || 0;
+  const prf = parseFloat(String(observedProof)) || 0;
+  const tare = parseFloat(String(tareWeight)) || 0;
   
   // For proof gallons input, we need to work backwards to find wine gallons
   let wineGallons = 0;
@@ -353,7 +354,7 @@ export const calculateDerivedValuesFromProofGallons = (proofGallons, observedPro
 };
 
 //**GOM **//
-export const calcGallonsFromWeight = (proof, netWeightLbs) =>
+export const calcGallonsFromWeight = (proof: number, netWeightLbs: number) =>
 {
   const spiritDensity = calculateSpiritDensity(proof);
   const wineGallons = netWeightLbs / spiritDensity;
@@ -365,7 +366,7 @@ export const calcGallonsFromWeight = (proof, netWeightLbs) =>
   };
 };
 
-export const calcWeightFromWineGallons = (proof, wineGallons) =>
+export const calcWeightFromWineGallons = (proof: number, wineGallons: number) =>
 {
   const spiritDensity = calculateSpiritDensity(proof);
   const netWeightLbs = wineGallons * spiritDensity;
@@ -373,7 +374,7 @@ export const calcWeightFromWineGallons = (proof, wineGallons) =>
   return parseFloat(netWeightLbs.toFixed(3));
 };
 
-export const calcWeightFromProofGallons = (proof, proofGallons) =>
+export const calcWeightFromProofGallons = (proof: number, proofGallons: number) =>
 {
   const spiritDensity = calculateSpiritDensity(proof);
   const wineGallons = proofGallons / (proof / 100);
@@ -382,7 +383,7 @@ export const calcWeightFromProofGallons = (proof, proofGallons) =>
   return parseFloat(netWeightLbs.toFixed(3));
 };
 
-export const calculateBottledVolume = (bottleSize, count = 1) => {
+export const calculateBottledVolume = (bottleSize: number, count: number = 1): number => {
   // Convert to wine gallons (1 liter = 0.264172 gallons)
   return (bottleSize * count * 0.264172);
 };
