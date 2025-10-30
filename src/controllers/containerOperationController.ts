@@ -264,13 +264,13 @@ export const adjustContents = async (req: AuthenticatedRequest, res: Response) =
     await prisma.transaction.create({
       data: {
         userId,
-        transactionType: TRANSACTION_TYPES.SAMPLE_ADJUST as TransactionType,
+        transactionType: method == 'add' ? TRANSACTION_TYPES.ADJUST_CONTAINER_ADD as TransactionType : TRANSACTION_TYPES.ADJUST_CONTAINER_REMOVE as TransactionType,
         containerId,
         productId: container.productId,
         proof: container.proof,
         volumeGallons,
         proofGallons,
-        notes: `${method} adjustment: ${wineGallons} WG are ${method} from container!`
+        notes: `${wineGallons.toFixed(2)} WG are ${method=='add'?'added':'removed'} from container!`
       }
     });
 

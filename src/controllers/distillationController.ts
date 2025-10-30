@@ -149,6 +149,12 @@ export const createDistillation = async (req: AuthenticatedRequest, res: Respons
         userId
       },
       include: {
+        container:{
+          select: {
+            id: true,
+            name: true,
+          }
+        },
         product: {
           select: {
             id: true,
@@ -166,8 +172,8 @@ export const createDistillation = async (req: AuthenticatedRequest, res: Respons
         }
       }
     });
-
-    res.status(201).json(distillation);
+    console.log("distillation:", distillation);
+    res.json(distillation);
   } catch (error) {
     console.error('Error creating distillation:', error);
     res.status(500).json({ error: 'Failed to create distillation' });
