@@ -30,7 +30,7 @@ export const getAllContainers = async (req: AuthenticatedRequest, res: Response)
             name: true,
             type: true,
             tareWeight: true,
-            totalVolume: true
+            capacityGallons: true
           }
         }
       },
@@ -73,7 +73,7 @@ export const getContainerById = async (req: AuthenticatedRequest, res: Response)
             name: true,
             type: true,
             tareWeight: true,
-            totalVolume: true
+            capacityGallons: true
           }
         }
       }
@@ -147,7 +147,7 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
             name: true,
             type: true,
             tareWeight: true,
-            totalVolume: true
+            capacityGallons: true
           }
         }
       }
@@ -238,7 +238,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
             name: true,
             type: true,
             tareWeight: true,
-            totalVolume: true
+            capacityGallons: true
           }
         }
       }
@@ -340,7 +340,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
             name: true,
             type: true,
             tareWeight: true,
-            totalVolume: true
+            capacityGallons: true
           }
         }
       }

@@ -20,7 +20,7 @@ export const initializeDefaultContainerKinds = async (userId: string): Promise<v
           ...kind,
           userId,
           tareWeight: kind.tareWeight,
-          totalVolume: kind.totalVolume
+          capacityGallons: kind.capacityGallons
         })),
         skipDuplicates: true
       });
@@ -105,7 +105,7 @@ export const createContainerKind = async (req: AuthenticatedRequest, res: Respon
       });
     }
 
-    const { name, type, tareWeight, totalVolume, description } = req.body;
+    const { name, type, tareWeight, capacityGallons, description } = req.body;
 
     const containerKind = await prisma.containerKind.create({
       data: {
@@ -113,7 +113,7 @@ export const createContainerKind = async (req: AuthenticatedRequest, res: Respon
         name,
         type,
         tareWeight: tareWeight ? parseFloat(tareWeight) : null,
-        totalVolume: totalVolume ? parseFloat(totalVolume) : null,
+        capacityGallons: capacityGallons ? parseFloat(capacityGallons) : null,
         description: description || null
       }
     });
@@ -136,7 +136,7 @@ export const updateContainerKind = async (req: AuthenticatedRequest, res: Respon
       });
     }
 
-    const { name, type, tareWeight, totalVolume, description } = req.body;
+    const { name, type, tareWeight, capacityGallons, description } = req.body;
 
     // Check if container kind exists and belongs to user
     const existing = await prisma.containerKind.findFirst({
@@ -156,7 +156,7 @@ export const updateContainerKind = async (req: AuthenticatedRequest, res: Respon
         name: name !== undefined ? name : existing.name,
         type: type !== undefined ? type : existing.type,
         tareWeight: tareWeight !== undefined ? (tareWeight ? parseFloat(tareWeight) : null) : existing.tareWeight,
-        totalVolume: totalVolume !== undefined ? (totalVolume ? parseFloat(totalVolume) : null) : existing.totalVolume,
+        capacityGallons: capacityGallons !== undefined ? (capacityGallons ? parseFloat(capacityGallons) : null) : existing.capacityGallons,
         description: description !== undefined ? description : existing.description
       }
     });

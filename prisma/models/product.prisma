@@ -28,7 +28,7 @@ model ContainerKind {
   name        String
   type        String
   tareWeight        Decimal?  @db.Decimal(10, 2)  // Weight of empty container
-  totalVolume         Decimal?  @db.Decimal(10, 2)  // Weight of full contents only
+  capacityGallons         Decimal?  @db.Decimal(10, 2)  // Weight gallons of full contents only
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
