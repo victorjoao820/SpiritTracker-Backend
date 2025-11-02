@@ -20,6 +20,52 @@ export const CONTAINER_CAPACITIES_GALLONS: Record<string, number> = {
   fermenter: 500,
 };
 
+// Default container kinds data
+export const DEFAULT_CONTAINER_KINDS = [
+  {
+    name: 'Wooden Barrel',
+    type: 'barrel',
+    tareWeight: 120,
+    totalVolume: 53,
+    description: 'Standard wooden barrel for aging spirits'
+  },
+  {
+    name: 'Metal Drum',
+    type: 'drum',
+    tareWeight: 50,
+    totalVolume: 55,
+    description: 'Metal drum container'
+  },
+  {
+    name: 'Square Tank',
+    type: 'tank',
+    tareWeight: 150,
+    totalVolume: 275,
+    description: 'Square tank (IBC) container'
+  },
+  {
+    name: 'Tote (250gal)',
+    type: 'tote',
+    tareWeight: 80,
+    totalVolume: 250,
+    description: 'Tote container (250gal)'
+  },
+  {
+    name: '5 Gallon Tote',
+    type: 'five_gallon_tote',
+    tareWeight: 5,
+    totalVolume: 5,
+    description: '5 gallon tote container'
+  },
+  {
+    name: 'Still',
+    type: 'still',
+    tareWeight: 200,
+    totalVolume: 100,
+    description: 'Distillation still'
+  }
+];
+
 export const CONTAINER_STATUS = {
   EMPTY: 'EMPTY',
   FILLED: 'FILLED',

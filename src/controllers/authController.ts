@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { AuthRequest } from '../models/user';
 import { prisma } from '../lib/prisma';
 import jwtService from '../services/jwtService';
+import { initializeDefaultContainerKinds } from './containerKindController';
 
 // Register new user
 export const register = async (req: Request, res: Response) => {
@@ -42,6 +43,9 @@ export const register = async (req: Request, res: Response) => {
     };
 
     const tokens = jwtService.generateTokenPair(tokenPayload);
+
+    // Initialize default container kinds for new user
+    await initializeDefaultContainerKinds(user.id);
     
     res.status(201).json({
       message: 'User created successfully',
@@ -81,6 +85,9 @@ export const login = async (req: Request, res: Response) => {
     };
     
     const tokens = jwtService.generateTokenPair(tokenPayload);
+
+    // Initialize default container kinds if they don't exist
+    await initializeDefaultContainerKinds(user.id);
 
     res.json({
       message: 'Login successful',

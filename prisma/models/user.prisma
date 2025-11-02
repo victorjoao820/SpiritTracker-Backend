@@ -7,6 +7,7 @@ model User {
 
   // Relations
   products         Product[]
+  containerKinds   ContainerKind[]
   containers       Container[]
   fermenters       Fermenter[]
   fermentations   Fermentation[]

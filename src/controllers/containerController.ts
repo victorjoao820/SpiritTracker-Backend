@@ -23,6 +23,15 @@ export const getAllContainers = async (req: AuthenticatedRequest, res: Response)
             name: true,
             description: true
           }
+        },
+        containerKind: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            tareWeight: true,
+            totalVolume: true
+          }
         }
       },
       orderBy: { updatedAt: 'desc' }
@@ -57,6 +66,15 @@ export const getContainerById = async (req: AuthenticatedRequest, res: Response)
             name: true,
             description: true
           }
+        },
+        containerKind: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            tareWeight: true,
+            totalVolume: true
+          }
         }
       }
     });
@@ -85,6 +103,7 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
     const {
       name,
       type,
+      containerKindId,
       productId,
       status = 'EMPTY',
       account,
@@ -101,6 +120,7 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
       data: {
         name: name || null,
         type: type || null,
+        containerKindId: containerKindId || null,
         productId: productId || null,
         status,
         account: account || null,
@@ -119,6 +139,15 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
             id: true,
             name: true,
             description: true
+          }
+        },
+        containerKind: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            tareWeight: true,
+            totalVolume: true
           }
         }
       }
@@ -165,6 +194,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
     const {
       name,
       type,
+      containerKindId,
       productId,
       status,
       account,
@@ -177,6 +207,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
 
     if (name !== undefined) updateData.name = name || null;
     if (type !== undefined) updateData.type = type || null;
+    if (containerKindId !== undefined) updateData.containerKindId = containerKindId || null;
     if (productId !== undefined) updateData.productId = productId || null;
     if (status !== undefined) updateData.status = status;
     if (account !== undefined) updateData.account = account || null;
@@ -199,6 +230,15 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
             id: true,
             name: true,
             description: true
+          }
+        },
+        containerKind: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            tareWeight: true,
+            totalVolume: true
           }
         }
       }
@@ -292,6 +332,15 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
             id: true,
             name: true,
             description: true
+          }
+        },
+        containerKind: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            tareWeight: true,
+            totalVolume: true
           }
         }
       }
