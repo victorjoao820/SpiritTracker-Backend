@@ -43,10 +43,20 @@ export const getAllContainerKinds = async (req: AuthenticatedRequest, res: Respo
       });
     }
 
-    const containerKinds = await prisma.containerKind.findMany({
+    let containerKinds = await prisma.containerKind.findMany({
       where: { userId },
       orderBy: { name: 'asc' }
     });
+
+    // If no container kinds exist, initialize defaults
+    if (containerKinds.length === 0) {
+      await initializeDefaultContainerKinds(userId);
+      // Fetch again after initialization
+      containerKinds = await prisma.containerKind.findMany({
+        where: { userId },
+        orderBy: { name: 'asc' }
+      });
+    }
 
     res.json(containerKinds);
   } catch (error) {
