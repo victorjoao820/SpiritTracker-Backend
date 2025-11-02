@@ -410,15 +410,15 @@ model TTBReport {
 }
 
 // Enums for better type safety
-enum ContainerType{
-  WOODEN_BARREL
-  METAL_DRUM
-  SQUARE_TANK
-  TOTE
-  FIVE_GALLON_TOTE
-  STILL
-  FERMENTER
-}
+// enum ContainerType{
+//   WOODEN_BARREL
+//   METAL_DRUM
+//   SQUARE_TANK
+//   TOTE
+//   FIVE_GALLON_TOTE
+//   STILL
+//   FERMENTER
+// }
 
 enum ContainerStatus {
   EMPTY
