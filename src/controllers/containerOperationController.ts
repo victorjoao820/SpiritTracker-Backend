@@ -171,10 +171,17 @@ export const proofDownSpirit = async (req: AuthenticatedRequest, res: Response) 
       data: { 
         proof: newProof,
         netWeight: newNetWeight
+      },
+      include: {
+        containerKind: {
+          select: {
+            id: true,
+            name: true,
+            capacityGallons: true
+          }
+        }
       }
     });
-
-    // Calculate volume and proof gallons changes
 
     // Create transaction log
     await prisma.transaction.create({

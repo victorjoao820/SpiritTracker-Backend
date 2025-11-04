@@ -218,7 +218,6 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
     if (fillDate !== undefined) updateData.fillDate = fillDate ? new Date(fillDate) : null;
 
 
-    console.log("req.body: ", req.body);
     const containerData = await prisma.container.findFirst({
       where: {
         id: req.params.id,

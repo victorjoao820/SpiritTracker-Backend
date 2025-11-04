@@ -172,7 +172,6 @@ export const createDistillation = async (req: AuthenticatedRequest, res: Respons
         }
       }
     });
-    console.log("distillation:", distillation);
     res.json(distillation);
   } catch (error) {
     console.error('Error creating distillation:', error);
