@@ -24,6 +24,12 @@ export const validateBulkProducts = [
   body('products.*.name').notEmpty().withMessage('Each product must have a name')
 ];
 
+// DSP validation rules
+export const validateDSP = [
+  body('name').notEmpty().trim().withMessage('DSP name is required'),
+  body('description').optional().trim(),
+];
+
 // Container validation rules
 export const validateContainer = [
   body('name').optional().trim(),

@@ -16,6 +16,7 @@ import transferInboundRoutes from './routes/transferInbound';
 import finishedGoodsRoutes from './routes/finishedGoods';
 import tankRoutes from './routes/tanks';
 import ttbReportRoutes from './routes/ttbReports';
+import dspRoutes from './routes/dsps';
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use('/api/transfers/inbound', transferInboundRoutes);
 app.use('/api/finished-goods', finishedGoodsRoutes);
 app.use('/api/tanks', tankRoutes);
 app.use('/api/ttb-reports', ttbReportRoutes);
+app.use('/api/dsps', dspRoutes);
 
 
 // Root endpoint for basic health check

@@ -23,6 +23,7 @@ model User {
   tanks            Tank[]
   tankLogs         TankLog[]
   ttbReports       TTBReport[]
+  dsps             DSP[]
 
   @@map("users")
 }
