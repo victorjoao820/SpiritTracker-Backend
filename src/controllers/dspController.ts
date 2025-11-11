@@ -75,6 +75,21 @@ export const createDSP = async (
 
     const { name, description } = req.body;
 
+    // Check if DSP with same name already exists for this user (case-insensitive)
+    // Using raw query for case-insensitive comparison
+    const existingDSP = await prisma.$queryRaw`
+      SELECT * FROM dsps 
+      WHERE "userId" = ${userId} 
+      AND LOWER(name) = LOWER(${name})
+      LIMIT 1
+    ` as any[];
+
+    if (existingDSP && existingDSP.length > 0) {
+      return res.status(400).json({ 
+        error: 'A DSP with this name already exists. Please choose a different name.' 
+      });
+    }
+
     const dsp = await prisma.dSP.create({
       data: {
         name,
@@ -105,6 +120,22 @@ export const updateDSP = async (
     }
 
     const { name, description } = req.body;
+
+    // Check if another DSP with same name already exists for this user (excluding current DSP, case-insensitive)
+    // Using raw query for case-insensitive comparison
+    const existingDSP = await prisma.$queryRaw`
+      SELECT * FROM dsps 
+      WHERE "userId" = ${userId} 
+      AND id != ${req.params.id}
+      AND LOWER(name) = LOWER(${name})
+      LIMIT 1
+    ` as any[];
+
+    if (existingDSP && existingDSP.length > 0) {
+      return res.status(400).json({ 
+        error: 'A DSP with this name already exists. Please choose a different name.' 
+      });
+    }
 
     const dsp = await prisma.dSP.updateMany({
       where: {
