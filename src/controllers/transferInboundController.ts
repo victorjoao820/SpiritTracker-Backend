@@ -39,14 +39,24 @@ export const getAllTransferInbound = async (req: AuthenticatedRequest, res: Resp
     });
 
     // Calculate next transfer number from ALL transfers (transferNumber is global auto-increment)
+    // Get the maximum transferNumber from all transfers (not just INBOUND)
     let nextTransferNumber = 1;
-    const lastTransfer = await prisma.transfer.findFirst({
-      where: { userId, direction: 'INBOUND' },
+    const allTransfers = await prisma.transfer.findMany({
+      where: { userId },
+      select: { transferNumber: true },
       orderBy: { transferNumber: 'desc' }
     });
 
-    if (lastTransfer) {
-      nextTransferNumber = parseInt(lastTransfer.transferNumber?.match(/\d+/)?.[0] || '1') + 1;
+    if (allTransfers && allTransfers.length > 0) {
+      // Find the maximum numeric value from all transferNumbers
+      const maxNumber = allTransfers.reduce((max, t) => {
+        if (!t.transferNumber) return max;
+        // Extract numeric part from transferNumber (handle formats like "TIB-1", "1", etc.)
+        const numMatch = t.transferNumber.toString().match(/\d+/);
+        const num = numMatch ? parseInt(numMatch[0], 10) : 0;
+        return Math.max(max, num);
+      }, 0);
+      nextTransferNumber = maxNumber + 1;
     }
 
     res.json({
