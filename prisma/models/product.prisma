@@ -54,6 +54,8 @@ model Container {
   tareWeight        Decimal?  @db.Decimal(10, 2)  // Weight of empty container
   netWeight         Decimal?  @db.Decimal(10, 2)  // Weight of contents only
   temperatureFahrenheit Decimal? @db.Decimal(5, 2)
+
+  sameCount         Decimal?  @db.Decimal(3, 2)  // Number of containers in the same group , It was created by Bulk create in TransferInbount. 
   fillDate          DateTime?
   location          String?   // Physical location/warehouse
   notes             String?   // Additional information

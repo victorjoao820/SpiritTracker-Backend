@@ -43,7 +43,8 @@ export const validateContainer = [
   body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
   body('fillDate').optional().isISO8601().withMessage('Fill date must be valid date'),
   body('location').optional().trim(),
-  body('notes').optional().trim()
+  body('notes').optional().trim(),
+  body('sameCount').optional().isNumeric().withMessage('Same count must be a number')
 ];
 
 export const validateContainerUpdate = [
@@ -57,6 +58,7 @@ export const validateContainerUpdate = [
   body('netWeight').optional().isNumeric().withMessage('Net weight must be a number'),
   body('temperatureFahrenheit').optional().isNumeric().withMessage('Temperature must be a number'),
   body('fillDate').optional().isISO8601().withMessage('Fill date must be valid date'),
+  body('sameCount').optional().isNumeric().withMessage('Same count must be a number'),
   // body('location').optional().trim(),
   // body('notes').optional().trim()
 ];

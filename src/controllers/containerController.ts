@@ -113,7 +113,8 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
       temperatureFahrenheit,
       fillDate,
       location,
-      notes
+      notes,
+      sameCount
     } = req.body;
 
     const container = await prisma.container.create({
@@ -131,6 +132,7 @@ export const createContainer = async (req: AuthenticatedRequest, res: Response) 
         fillDate: fillDate ? new Date(fillDate) : null,
         location: location || null,
         notes: notes || null,
+        sameCount: sameCount ? parseFloat(sameCount) : null,
         userId
       },
       include: {
@@ -202,7 +204,8 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
       tareWeight,
       netWeight,
       temperatureFahrenheit,
-      fillDate
+      fillDate,
+      sameCount
     } = req.body;
 
     if (name !== undefined) updateData.name = name || null;
@@ -216,6 +219,7 @@ export const updateContainer = async (req: AuthenticatedRequest, res: Response) 
     if (netWeight !== undefined) updateData.netWeight = netWeight ? parseFloat(netWeight) : null;
     if (temperatureFahrenheit !== undefined) updateData.temperatureFahrenheit = temperatureFahrenheit ? parseFloat(temperatureFahrenheit) : null;
     if (fillDate !== undefined) updateData.fillDate = fillDate ? new Date(fillDate) : null;
+    if (sameCount !== undefined) updateData.sameCount = sameCount ? parseFloat(sameCount) : null;
 
 
     const containerData = await prisma.container.findFirst({
@@ -440,6 +444,7 @@ export const bulkCreateContainers = async (req: AuthenticatedRequest, res: Respo
         fillDate: container.fillDate || null,
         location: container.location || null,
         notes: container.notes || null,
+        sameCount: container.sameCount || null,
         userId
       })),
       skipDuplicates: true
